@@ -1,0 +1,6 @@
+com\hotel\shared\model\Room.class
+com\hotel\rmi\RMIServer.class
+com\hotel\rmi\database\DBConnection.class
+com\hotel\shared\service\RoomService.class
+com\hotel\rmi\RoomServiceImpl.class
+com\hotel\rmi\dao\RoomDAO.class
