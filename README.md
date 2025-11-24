@@ -63,7 +63,7 @@ Run everything on `127.0.0.1`:
 mvn -f rmi-server clean package
 
 # 2. Start the RMI server (optionally pass host IP)
-java -jar rmi-server/target/rmi-server-1.0-SNAPSHOT-shaded.jar
+java -cp rmi-server/target/rmi-server-1.0-SNAPSHOT.jar com.hotel.rmi.RMIServer
 
 # 3. Start Spring Boot API (separate terminal)
 mvn -f spring-api spring-boot:run
