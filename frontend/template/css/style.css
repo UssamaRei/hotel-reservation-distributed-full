@@ -485,7 +485,7 @@ header {
      width: 100%;
      top: 50%;
      left: 0;
-     transform: translateY(-50%);
+     transform: translateY(-48.7%) !important;
      z-index: 100;
      pointer-events: none;
      padding: 20px 0;
@@ -879,6 +879,72 @@ header {
      margin-left: 9%;
 }
 
+/* ====== FIX: Make the booking form fully visible on the banner ====== */
+.banner_main {
+     height: auto !important;          /* let it grow with content */
+     min-height: 600px;                /* keep minimum height for images */
+     max-height: none !important;      /* remove the hard limit */
+     overflow: visible !important;     /* allow the form to stick out */
+     padding-bottom: 100px;            /* extra breathing room at the bottom */
+ }
+ 
+ .booking_ocline {
+     position: absolute;
+     top: 50%;
+     left: 0;
+     right: 0;
+     transform: translateY(-50%);
+     max-height: none !important;      /* remove the 90vh limit */
+     overflow: visible !important;     /* crucial */
+     padding: 40px 15px;               /* more space around the form */
+     pointer-events: none;             /* only the form itself is clickable */
+ }
+ 
+ .book_room {
+     max-width: 680px;
+     margin: 0 auto;
+     pointer-events: auto;             /* re-enable clicks inside the form */
+     overflow: visible !important;
+ }
+ 
+ /* Optional but looks better: push the form a little lower so it’s perfectly centered */
+ @media (max-width: 991px) {
+     .booking_ocline {
+         top: 55%;
+     }
+ }
+
+ /* FINAL FIX – Carousel always matches the real height of .banner_main */
+.banner_main {
+     height: auto !important;
+     min-height: 100vh;           /* full screen on small screens */
+     max-height: none !important;
+     overflow: visible !important;
+     padding-bottom: 120px;       /* space for the form that sticks out */
+     position: relative;
+ }
+ 
+ .banner,
+ .banner .carousel-inner,
+ .banner .carousel-item,
+ .banner .carousel-item img,
+ .first-slide,
+ .second-slide,
+ .third-slide {
+     height: 100% !important;     /* this is the key line */
+     min-height: inherit !important;
+     max-height: none !important;
+     object-fit: cover !important;
+ }
+ 
+ /* Make sure the carousel itself stretches 100% of banner_main */
+ #myCarousel {
+     position: absolute !important;
+     top: 0; left: 0; right: 0; bottom: 0;
+     height: 100% !important;
+     width: 100% !important;
+     z-index: 1;
+ }
 
 /** end banner section **/
 
