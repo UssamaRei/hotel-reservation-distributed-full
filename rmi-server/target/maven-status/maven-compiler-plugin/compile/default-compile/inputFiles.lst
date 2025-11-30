@@ -1,6 +1,6 @@
-C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\dao\RoomDAO.java
-C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\RoomServiceImpl.java
-C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\model\Room.java
-C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\RMIServer.java
-C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\database\DBConnection.java
-C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\service\RoomService.java
+C:\Users\admin\Desktop\Distributed Systeme\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\database\DBConnection.java
+C:\Users\admin\Desktop\Distributed Systeme\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\model\Room.java
+C:\Users\admin\Desktop\Distributed Systeme\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\RMIServer.java
+C:\Users\admin\Desktop\Distributed Systeme\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\RoomServiceImpl.java
+C:\Users\admin\Desktop\Distributed Systeme\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\dao\RoomDAO.java
+C:\Users\admin\Desktop\Distributed Systeme\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\service\RoomService.java
