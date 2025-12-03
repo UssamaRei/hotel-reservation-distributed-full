@@ -315,13 +315,13 @@ button {
 
 .navigation.navbar-dark .navbar-nav .nav-link {
      padding: 7px 0px 27px 0px;
-     margin: 0 22px;
+     margin: 0 18px;
      color: #010101;
      font-size: 16px;
      line-height: 20px;
      font-weight: 600;
      text-transform: uppercase;
-     border-bottom: #fff solid 3px;
+     border-bottom: 3px solid transparent;
      transition: all 0.3s ease;
      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
      position: relative;
@@ -333,7 +333,7 @@ button {
 .navigation.navbar-dark .navbar-nav .nav-link:focus,
 .navigation.navbar-dark .navbar-nav .nav-link:hover {
      color: #fe0000;
-     border-bottom: #fe0000 solid 3px;
+     border-bottom: #fe0000 solid 2px;
 }
 
 .navigation.navbar-dark .navbar-nav .active>.nav-link,
@@ -341,7 +341,50 @@ button {
 .navigation.navbar-dark .navbar-nav .nav-link.show,
 .navigation.navbar-dark .navbar-nav .show>.nav-link {
      color: #fe0000;
-     border-bottom: #fe0000 solid 3px;
+     border-bottom: #fe0000 solid 2px;
+}
+
+/* Align left menu and right CTA in navbar */
+.navigation .navbar-nav.mr-auto {
+     margin-right: auto;
+}
+
+.navigation .navbar-nav.ml-auto {
+     margin-left: 10px;
+}
+
+/* Post Appartement button in navbar */
+.nav-post-appt-btn {
+     padding: 8px 20px !important;
+     border-radius: 50px !important;
+     font-size: 14px !important;
+     font-weight: 600 !important;
+     text-transform: uppercase;
+     letter-spacing: 0.5px;
+     background: linear-gradient(135deg, #ffc107, #ffdd57);
+     color: #111 !important;
+     border: none;
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     gap: 6px;
+}
+
+.nav-post-appt-btn i {
+     font-size: 14px;
+}
+
+.nav-post-appt-btn:hover {
+     background: linear-gradient(135deg, #ffdd57, #ffc107);
+     color: #000 !important;
+     transform: translateY(-1px);
+     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.nav-post-appt-btn:active {
+     transform: translateY(0);
+     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
 .navbar-expand-md .navbar-nav {
@@ -362,8 +405,8 @@ header {
 
 .header {
      width: 100%;
-     height: 86px;
-     padding: 15px 0px 15px 0px;
+     height: 80px;
+     padding: 10px 0;
      background: #fff;
      position: relative;
      z-index: 1000;
@@ -1070,6 +1113,32 @@ header {
      line-height: 28px;
      color: #666;
      margin-bottom: 15px;
+}
+
+.about_highlights {
+     margin-bottom: 25px;
+}
+
+.about_stat {
+     background: #f8f9fb;
+     border-radius: 12px;
+     padding: 18px 22px;
+     margin-bottom: 15px;
+     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.about_stat h3 {
+     font-size: 26px;
+     font-weight: 700;
+     color: #121212;
+     margin: 0 0 5px 0;
+     padding: 0;
+}
+
+.about_stat p {
+     margin: 0;
+     font-size: 14px;
+     color: #777;
 }
 
 .about_features {
