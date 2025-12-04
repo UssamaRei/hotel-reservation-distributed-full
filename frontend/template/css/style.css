@@ -994,6 +994,9 @@ header {
 .titlepage {
      text-align: center;
      padding-bottom: 40px;
+     display: flex;
+     flex-direction: column;
+     gap: 20px;
 }
 
 .titlepage h2 {
@@ -1286,6 +1289,11 @@ header {
      font-weight: 600;
      text-transform: uppercase;
      letter-spacing: 1px;
+}
+
+.about .titlepage .margin_0 {
+     text-align: left;
+     padding-left: 5px;
 }
 /** end about section **/
 
