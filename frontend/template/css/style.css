@@ -294,6 +294,10 @@ button {
      width: 100%;
 }
 
+.logo_section .full {
+     width: 85% !important;
+}
+
 .logo_section .logo {
      display: flex;
      align-items: center;
