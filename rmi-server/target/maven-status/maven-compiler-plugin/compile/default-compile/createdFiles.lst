@@ -1,6 +1,14 @@
-com\hotel\shared\model\Room.class
+com\hotel\rmi\dao\ReservationDAO.class
+com\hotel\rmi\ListingServiceImpl.class
+com\hotel\rmi\ReservationServiceImpl.class
 com\hotel\rmi\RMIServer.class
+com\hotel\shared\model\Listing.class
+com\hotel\shared\model\Reservation.class
+com\hotel\shared\model\Room.class
+com\hotel\shared\service\ReservationService.class
+com\hotel\shared\service\ListingService.class
 com\hotel\rmi\database\DBConnection.class
-com\hotel\shared\service\RoomService.class
 com\hotel\rmi\RoomServiceImpl.class
 com\hotel\rmi\dao\RoomDAO.class
+com\hotel\rmi\dao\ListingDAO.class
+com\hotel\shared\service\RoomService.class

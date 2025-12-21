@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,24 +14,28 @@
         .reservation-card {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             margin-bottom: 25px;
             transition: all 0.3s;
             border-left: 5px solid #fe0000;
         }
+
         .reservation-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(254,0,0,0.15);
+            box-shadow: 0 15px 40px rgba(254, 0, 0, 0.15);
         }
+
         .reservation-header {
             background: linear-gradient(135deg, #fe0000, #cc0000);
             color: white;
             padding: 20px;
         }
+
         .reservation-body {
             padding: 25px;
         }
+
         .status-badge {
             position: absolute;
             top: 15px;
@@ -40,14 +45,28 @@
             font-size: 14px;
             font-weight: bold;
         }
-        .status-confirmed { background: #28a745; color: white; }
-        .status-pending { background: #ffc107; color: black; }
-        .status-cancelled { background: #dc3545; color: white; }
+
+        .status-confirmed {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-pending {
+            background: #ffc107;
+            color: black;
+        }
+
+        .status-cancelled {
+            background: #dc3545;
+            color: white;
+        }
+
         .no-reservations {
             text-align: center;
             padding: 80px 20px;
             color: #666;
         }
+
         .no-reservations i {
             font-size: 80px;
             color: #fe0000;
@@ -55,11 +74,12 @@
         }
     </style>
 </head>
+
 <body class="main-layout">
 
     <!-- Loader -->
     <div class="loader_bg">
-        <div class="loader"><img src="images/loading.gif" alt="#"/></div>
+        <div class="loader"><img src="images/loading.gif" alt="#" /></div>
     </div>
 
     <!-- header -->
@@ -124,7 +144,8 @@
                 <h3>Aucune réservation pour le moment</h3>
                 <p>Vous n'avez pas encore réservé d'appartement.</p>
                 <div class="about_action">
-                    <a class="read_more" href="Appartement.html" style="min-width: 300px; margin-top: 10px;">Discover appartements</a>
+                    <a class="read_more" href="Appartement.html" style="min-width: 300px; margin-top: 10px;">Discover
+                        appartements</a>
                 </div>
             </div>
         </div>
@@ -187,19 +208,268 @@
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/custom.js"></script>
     <script>
-        // Simple mode detection (you already use ?mode=simple)
-        document.addEventListener("DOMContentLoaded", function() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get("mode") === "simple") {
-                // In future: load real reservations from localStorage or API
-                const reservations = []; // Replace with real data later
+        document.addEventListener("DOMContentLoaded", async function () {
+            // Get current user from sessionStorage
+            let currentUser = null;
+            try {
+                const stored = sessionStorage.getItem('currentUser');
+                if (stored) {
+                    currentUser = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.warn("No user in session");
+            }
+
+            if (!currentUser) {
+                document.getElementById("reservationsList").innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <div class="alert alert-warning">
+                            <h4>Veuillez vous connecter pour voir vos réservations</h4>
+                        </div>
+                    </div>`;
+                document.getElementById("noReservations").style.display = "none";
+                return;
+            }
+
+            const userId = currentUser.id;
+
+            // Fetch user's reservations
+            try {
+                const response = await fetch(`http://localhost:8080/api/reservations/user/${userId}`);
+                if (!response.ok) throw new Error("Failed to load reservations");
+
+                let reservations = await response.json();
+
+                const container = document.getElementById("reservationsList");
+                container.innerHTML = ""; // clear example
 
                 if (reservations.length === 0) {
-                    document.getElementById("reservationsList").style.display = "none";
                     document.getElementById("noReservations").style.display = "block";
+                    return;
                 }
+
+                // Fetch listing details for each reservation
+                const listingPromises = reservations.map(async (res) => {
+                    try {
+                        const listingRes = await fetch(`http://localhost:8080/api/listings/${res.listingId}`);
+                        if (listingRes.ok) {
+                            res.listing = await listingRes.json();
+                        } else {
+                            res.listing = { title: "Appartement inconnu", city: "", address: "", imageUrl: "images/room1.jpg" };
+                        }
+                    } catch (err) {
+                        console.warn(`Failed to load listing ${res.listingId}`, err);
+                        res.listing = { title: "Appartement indisponible", city: "", address: "", imageUrl: "images/room1.jpg" };
+                    }
+                    return res;
+                });
+
+                reservations = await Promise.all(listingPromises);
+
+                // Generate cards
+                reservations.forEach(res => {
+                    const nights = Math.round((new Date(res.checkOut) - new Date(res.checkIn)) / (1000 * 60 * 60 * 24));
+
+                    const statusClass = {
+                        pending: "status-pending bg-warning text-dark",
+                        confirmed: "status-confirmed bg-success text-white",
+                        cancelled: "status-cancelled bg-danger text-white"
+                    }[res.status] || "bg-secondary text-white";
+
+                    const statusText = {
+                        pending: "En attente",
+                        confirmed: "Confirmée",
+                        cancelled: "Annulée"
+                    }[res.status] || res.status;
+
+                    const canEditDelete = res.status === "pending";
+
+                    const card = document.createElement("div");
+                    card.className = "reservation-card position-relative mb-4";
+                    card.innerHTML = `
+                        <div class="status-badge ${statusClass}">${statusText}</div>
+                        <div class="reservation-header">
+                            <h4 class="mb-0">${res.listing?.title || 'Appartement inconnu'}</h4>
+                            <small>Réservation #CozyStay-${res.id}</small>
+                        </div>
+                        <div class="reservation-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <img src="${res.listing?.imageUrl || 'images/room1.jpg'}" 
+                                         class="img-fluid rounded" 
+                                         alt="Appartement" 
+                                         style="height:200px; object-fit:cover;">
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p><strong>Arrivée :</strong> ${formatDate(res.checkIn)}</p>
+                                            <p><strong>Départ :</strong> ${formatDate(res.checkOut)}</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <p><strong>Personnes :</strong> ${res.listing.maxGuests || 'N/A'}</p>
+                                            <p><strong>Total :</strong> ${res.totalPrice}€ (${nights} nuit${nights > 1 ? 's' : ''})</p>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <p class="text-muted">
+                                        <i class="fa fa-map-marker"></i> 
+                                        ${res.listing?.city ? res.listing.city + ', ' : ''} 
+                                        ${res.listing?.address || 'Adresse non disponible'}
+                                    </p>
+                                    <div class="mt-3">
+                                        <button class="btn btn-outline-primary btn-sm mr-2" 
+                                                onclick="openEditForm(${res.id}, '${res.checkIn}', '${res.checkOut}', ${res.guests}, ${res.listing.pricePerNight})"
+                                                ${!canEditDelete ? 'disabled' : ''}>
+                                            <i class="fa fa-edit"></i> Modifier
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" 
+                                                onclick="cancelReservation(${res.id})" 
+                                                ${!canEditDelete ? 'disabled' : ''}>
+                                            <i class="fa fa-trash"></i> Annuler
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (err) {
+                console.error("Error loading reservations:", err);
+                document.getElementById("reservationsList").innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <div class="alert alert-danger">
+                            <h4>Impossible de charger vos réservations</h4>
+                            <p>Vérifiez que le serveur est démarré.</p>
+                        </div>
+                    </div>`;
             }
         });
+
+        // Format date nicely
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+
+        // Cancel reservation
+        async function cancelReservation(id) {
+            if (!confirm("Voulez-vous vraiment annuler cette réservation ?")) return;
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/reservations/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert("Réservation annulée avec succès !");
+                    location.reload();
+                } else {
+                    alert("Erreur lors de l'annulation");
+                }
+            } catch (err) {
+                alert("Impossible de contacter le serveur");
+            }
+        }
+
+        // Floating Edit Form — ONLY check-in, check-out, total price
+        function openEditForm(id, checkIn, checkOut, guests, pricePerNight) {
+            // Remove existing form if any
+            const existing = document.getElementById("editFormFloating");
+            if (existing) existing.remove();
+
+            const form = document.createElement("div");
+            form.id = "editFormFloating";
+            form.innerHTML = `
+        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; display:flex; align-items:center; justify-content:center;">
+            <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <h3 class="text-center mb-4">Modifier la réservation #CozyStay-${id}</h3>
+                <form id="editReservationForm">
+                    <div class="form-group mb-3">
+                        <label>Arrivée</label>
+                        <input type="date" id="editCheckIn" class="form-control" value="${checkIn}" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Départ</label>
+                        <input type="date" id="editCheckOut" class="form-control" value="${checkOut}" required>
+                    </div>
+                    <div class="text-center mb-4">
+                        <strong id="editTotalPrice" style="font-size:1.4rem; color:#fe0000;"></strong>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg mx-2">Sauvegarder</button>
+                        <button type="button" class="btn btn-secondary btn-lg mx-2" onclick="document.getElementById('editFormFloating').remove()">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+            document.body.appendChild(form);
+
+            // Update total price live
+            function updateEditTotal() {
+                const inDate = document.getElementById("editCheckIn").value;
+                const outDate = document.getElementById("editCheckOut").value;
+                if (inDate && outDate && inDate < outDate) {
+                    const nights = Math.round((new Date(outDate) - new Date(inDate)) / (86400000));
+                    const total = (nights * pricePerNight).toFixed(2);
+                    document.getElementById("editTotalPrice").textContent = `Nouveau total : ${total}€ (${nights} nuit${nights > 1 ? 's' : ''})`;
+                } else {
+                    document.getElementById("editTotalPrice").textContent = "Veuillez sélectionner des dates valides";
+                    document.getElementById("editTotalPrice").style.color = "#dc3545";
+                }
+            }
+
+            document.getElementById("editCheckIn").addEventListener("change", updateEditTotal);
+            document.getElementById("editCheckOut").addEventListener("change", updateEditTotal);
+            updateEditTotal();
+
+            // Submit edit — ONLY updates checkIn, checkOut, totalPrice
+            document.getElementById("editReservationForm").addEventListener("submit", async function (e) {
+                e.preventDefault();
+
+                const newCheckIn = document.getElementById("editCheckIn").value;
+                const newCheckOut = document.getElementById("editCheckOut").value;
+
+                if (newCheckIn >= newCheckOut) {
+                    alert("La date de départ doit être après la date d'arrivée");
+                    return;
+                }
+
+                const nights = Math.round((new Date(newCheckOut) - new Date(newCheckIn)) / 86400000);
+                const newTotal = (nights * pricePerNight).toFixed(2);
+
+                const updatedData = {
+                    checkIn: newCheckIn,
+                    checkOut: newCheckOut,
+                    totalPrice: newTotal
+                };
+
+                try {
+                    const response = await fetch(`http://localhost:8080/api/reservations/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedData)
+                    });
+
+                    if (response.ok) {
+                        alert("✅ Réservation modifiée avec succès !\nNouveau total : " + newTotal + "€");
+                        document.getElementById("editFormFloating").remove();
+                        location.reload();
+                    } else {
+                        const error = await response.text();
+                        alert("❌ Erreur : " + error);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Impossible de contacter le serveur");
+                }
+            });
+        }
     </script>
 </body>
+
 </html>

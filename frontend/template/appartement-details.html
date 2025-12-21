@@ -208,21 +208,7 @@
                                     <input type="date" class="form-control" id="checkout" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>Nombre de personnes</label>
-                                    <select class="form-control" id="guests" required>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nom complet</label>
-                                    <input type="text" class="form-control" placeholder="Jean Dupont" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Email</label>
-                                    <input type="email" class="form-control" placeholder="jean@example.com" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Téléphone</label>
-                                    <input type="tel" class="form-control" placeholder="+33 6 12 34 56 78" required>
+                                    <label id="totalPrice"></label>
                                 </div>
                                 <button type="submit" class="submit-reservation">
                                     Confirmer la réservation
@@ -295,47 +281,133 @@
     <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
     <script src="js/custom.js"></script>
     <script>
-        // Fill page with URL parameters
+        // Fill page with URL parameters and prepare data
         document.addEventListener("DOMContentLoaded", function () {
             const params = new URLSearchParams(window.location.search);
-            document.getElementById("appartementTitle").textContent = params.get("title") || "Appartement";
-            document.getElementById("city").textContent = params.get("city") || "Paris";
-            document.getElementById("maxGuests").textContent = params.get("guests") || "2";
-            document.getElementById("address").textContent = params.get("address") || "Adresse non disponible";
-            document.getElementById("price").textContent = params.get("price") || "150";
-            document.getElementById("description").textContent = params.get("desc") || "Bel appartement bien situé...";
-
+    
+            const title = params.get("title") || "Appartement";
+            const city = params.get("city") || "Paris";
+            const maxGuests = parseInt(params.get("guests")) || 2;
+            const pricePerNight = parseFloat(params.get("price")) || 150;
+            const address = params.get("address") || "Adresse non disponible";
+            const desc = params.get("desc") || "Bel appartement bien situé...";
             const img = params.get("img") || "images/room1.jpg";
-            document.querySelector(".details-hero").style.backgroundImage = `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('${img}')`;
+            const listingId = params.get("id"); // crucial for reservation
+    
+            document.getElementById("appartementTitle").textContent = decodeURIComponent(title);
+            document.getElementById("city").textContent = decodeURIComponent(city);
+            document.getElementById("maxGuests").textContent = maxGuests;
+            document.getElementById("address").textContent = decodeURIComponent(address);
+            document.getElementById("price").textContent = pricePerNight;
+            document.getElementById("description").textContent = decodeURIComponent(desc);
+            document.querySelector(".details-hero").style.backgroundImage = 
+                `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('${decodeURIComponent(img)}')`;
+    
+            // Store appartement data globally
+            window.appartementData = {
+                id: listingId,
+                pricePerNight: pricePerNight
+            };
+    
+            // Get current user from sessionStorage (you already added it)
+            let currentUser = null;
+            try {
+                const stored = sessionStorage.getItem('currentUser');
+                if (stored) {
+                    currentUser = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.warn("No valid user in session");
+            }
+    
+            window.currentUser = currentUser || { id: 1, name: "Guest", email: "guest@example.com" }; // fallback
+    
+            // Update total price when dates change
+            function updateTotalPrice() {
+                const checkin = document.getElementById("checkin").value;
+                const checkout = document.getElementById("checkout").value;
+    
+                if (checkin && checkout && checkin < checkout) {
+                    const nights = Math.round((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
+                    const total = nights * pricePerNight;
+                    document.getElementById("totalPrice").innerHTML = 
+                        `<strong style="color:#fe0000; font-size:1.4rem;">Prix total: ${total.toFixed(2)}€</strong> <small>(${nights} nuit${nights > 1 ? 's' : ''})</small>`;
+                } else {
+                    document.getElementById("totalPrice").textContent = "";
+                }
+            }
+    
+            document.getElementById("checkin").addEventListener("change", updateTotalPrice);
+            document.getElementById("checkout").addEventListener("change", updateTotalPrice);
         });
-
-        // nombres de personnes list
-        const urlParams = new URLSearchParams(window.location.search);
-        const maxGuests = parseInt(urlParams.get("guests")) || 2;  // default to 2 if not found
-
-        const guestsSelect = document.getElementById("guests");
-        guestsSelect.innerHTML = ""; // clear existing options
-
-        for (let i = 1; i <= maxGuests; i++) {
-            const option = document.createElement("option");
-            option.value = i;
-            option.textContent = i + (i === 1 ? " personne" : " personnes");
-            guestsSelect.appendChild(option);
-        }
-
-        // Optional: set default to max guests
-        guestsSelect.value = maxGuests;
-
-        // Show reservation form when button clicked
+    
+        // Show form when button clicked
         document.getElementById("reserveNowBtn").addEventListener("click", function () {
             document.getElementById("reservationFormContainer").style.display = "block";
-            this.style.display = "none"; // hide the button
+            this.style.display = "none";
+            // Trigger total price update if dates already selected
+            const event = new Event('change');
+            document.getElementById("checkin").dispatchEvent(event);
+            document.getElementById("checkout").dispatchEvent(event);
         });
-
-        // Optional: submit handler (you can modify this later)
-        document.getElementById("reservationForm").addEventListener("submit", function (e) {
+    
+        // Submit reservation to backend
+        document.getElementById("reservationForm").addEventListener("submit", async function (e) {
             e.preventDefault();
-            alert("Réservation confirmée ! (à connecter au backend plus tard)");
+    
+            const submitBtn = this.querySelector(".submit-reservation");
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Réservation en cours...";
+    
+            // Calculate nights and total
+            const checkin = document.getElementById("checkin").value;
+            const checkout = document.getElementById("checkout").value;
+            const nights = Math.round((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
+            const totalPrice = (nights * window.appartementData.pricePerNight).toFixed(2);
+    
+            const reservationData = {
+                listingId: parseInt(window.appartementData.id),
+                userId: window.currentUser.id,
+                checkIn: checkin,
+                checkOut: checkout,
+                totalPrice: totalPrice,
+            };
+    
+            try {
+                const response = await fetch('http://localhost:8080/api/reservations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(reservationData)
+                });
+    
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`✅ Réservation confirmée !\n\n` +
+                          `ID: ${result.id}\n` +
+                          `Appartement: ${decodeURIComponent(new URLSearchParams(window.location.search).get("title"))}\n` +
+                          `Dates: ${result.checkIn} → ${result.checkOut}\n` +
+                          `Total: ${result.totalPrice}€\n` +
+                          `Merci ${window.currentUser.name} !`);
+    
+                    // Reset everything
+                    this.reset();
+                    document.getElementById("totalPrice").textContent = "";
+                    document.getElementById("reservationFormContainer").style.display = "none";
+                    document.getElementById("reserveNowBtn").style.display = "block";
+                } else {
+                    const errorText = await response.text();
+                    alert("❌ Erreur lors de la réservation :\n" + errorText);
+                }
+            } catch (err) {
+                console.error("Network error:", err);
+                alert("❌ Impossible de contacter le serveur.\nVérifiez que le backend est démarré sur le port 8080.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         });
     </script>
 </body>

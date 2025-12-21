@@ -1,0 +1,10 @@
+com\hotel\api\controller\ListingController.class
+com\hotel\shared\model\Listing.class
+com\hotel\shared\model\Room.class
+com\hotel\shared\service\ListingService.class
+com\hotel\api\config\RMIConfig.class
+com\hotel\api\controller\RoomController.class
+com\hotel\api\config\CorsConfig$1.class
+com\hotel\api\HotelApiApplication.class
+com\hotel\api\config\CorsConfig.class
+com\hotel\shared\service\RoomService.class
