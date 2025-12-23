@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TrendingUp, DollarSign, Home, Calendar, Eye } from 'lucide-react';
 
 interface StatCardProps {
@@ -33,117 +33,142 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, trendUp 
 
 interface Booking {
   id: number;
-  customerName: string;
-  hotelName: string;
-  date: string;
-  status: 'Confirmed' | 'Pending' | 'Cancelled';
+  listingTitle: string;
+  guestName: string;
+  guestEmail: string;
+  checkIn: string;
+  checkOut: string;
+  totalPrice: number;
+  status: 'confirmed' | 'pending' | 'cancelled';
+}
+
+interface Stats {
+  totalListings: number;
+  totalReservations: number;
+  confirmedReservations: number;
+  pendingReservations: number;
+  totalRevenue: number;
 }
 
 const DashboardPage: React.FC = () => {
-  // Mock data for stats
-  const stats = {
-    totalBookings: 248,
-    revenue: '$45,678',
-    roomsAvailable: 32,
+  const [stats, setStats] = useState<Stats>({
+    totalListings: 0,
+    totalReservations: 0,
+    confirmedReservations: 0,
+    pendingReservations: 0,
+    totalRevenue: 0,
+  });
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // TODO: Replace with actual admin user ID from auth context
+  const currentUserId = 1;
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch stats
+      const statsResponse = await fetch('http://localhost:8080/api/admin/stats', {
+        headers: {
+          'X-User-Id': currentUserId.toString(),
+          'X-User-Role': 'admin',
+        },
+      });
+
+      if (!statsResponse.ok) {
+        throw new Error('Failed to fetch stats');
+      }
+
+      const statsData = await statsResponse.json();
+      setStats(statsData);
+
+      // Fetch recent reservations
+      const reservationsResponse = await fetch('http://localhost:8080/api/admin/reservations', {
+        headers: {
+          'X-User-Id': currentUserId.toString(),
+          'X-User-Role': 'admin',
+        },
+      });
+
+      if (!reservationsResponse.ok) {
+        throw new Error('Failed to fetch reservations');
+      }
+
+      const reservationsData = await reservationsResponse.json();
+      // Get the 8 most recent
+      setRecentBookings(reservationsData.slice(0, 8));
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Mock data for recent bookings
-  const recentBookings: Booking[] = [
-    {
-      id: 1,
-      customerName: 'John Smith',
-      hotelName: 'Grand Plaza Hotel',
-      date: '2025-11-25',
-      status: 'Confirmed',
-    },
-    {
-      id: 2,
-      customerName: 'Sarah Johnson',
-      hotelName: 'Ocean View Resort',
-      date: '2025-11-24',
-      status: 'Confirmed',
-    },
-    {
-      id: 3,
-      customerName: 'Michael Brown',
-      hotelName: 'Mountain Lodge',
-      date: '2025-11-23',
-      status: 'Pending',
-    },
-    {
-      id: 4,
-      customerName: 'Emily Davis',
-      hotelName: 'City Center Hotel',
-      date: '2025-11-23',
-      status: 'Confirmed',
-    },
-    {
-      id: 5,
-      customerName: 'David Wilson',
-      hotelName: 'Sunset Beach Resort',
-      date: '2025-11-22',
-      status: 'Pending',
-    },
-    {
-      id: 6,
-      customerName: 'Lisa Anderson',
-      hotelName: 'Riverside Inn',
-      date: '2025-11-22',
-      status: 'Cancelled',
-    },
-    {
-      id: 7,
-      customerName: 'Robert Taylor',
-      hotelName: 'Grand Plaza Hotel',
-      date: '2025-11-21',
-      status: 'Confirmed',
-    },
-    {
-      id: 8,
-      customerName: 'Jennifer Martinez',
-      hotelName: 'Ocean View Resort',
-      date: '2025-11-20',
-      status: 'Confirmed',
-    },
-  ];
-
   const getStatusColor = (status: Booking['status']) => {
-    switch (status) {
-      case 'Confirmed':
+    switch (status.toLowerCase()) {
+      case 'confirmed':
         return 'bg-green-100 text-green-800';
-      case 'Pending':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Cancelled':
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+
       {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          title="Total Bookings"
-          value={stats.totalBookings}
-          icon={<Calendar className="w-6 h-6" />}
-          trend="+12.5%"
-          trendUp={true}
+          title="Total Listings"
+          value={stats.totalListings}
+          icon={<Home className="w-6 h-6" />}
         />
         <StatCard
-          title="Revenue"
-          value={stats.revenue}
+          title="Total Bookings"
+          value={stats.totalReservations}
+          icon={<Calendar className="w-6 h-6" />}
+          trend={stats.confirmedReservations > stats.pendingReservations ? "+12.5%" : "-3.2%"}
+          trendUp={stats.confirmedReservations > stats.pendingReservations}
+        />
+        <StatCard
+          title="Total Revenue"
+          value={`$${stats.totalRevenue.toLocaleString()}`}
           icon={<DollarSign className="w-6 h-6" />}
           trend="+8.3%"
           trendUp={true}
-        />
-        <StatCard
-          title="Rooms Available"
-          value={stats.roomsAvailable}
-          icon={<Home className="w-6 h-6" />}
-          trend="-3.2%"
-          trendUp={false}
         />
       </div>
 
@@ -158,68 +183,78 @@ const DashboardPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer Name
+                  Guest Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hotel Name
+                  Listing
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
+                  Check-in
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {recentBookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <span className="text-indigo-600 font-medium">
-                          {booking.customerName.split(' ').map((n) => n[0]).join('')}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {booking.customerName}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{booking.hotelName}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(booking.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                        booking.status
-                      )}`}
-                    >
-                      {booking.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button className="text-indigo-600 hover:text-indigo-900 font-medium flex items-center space-x-1">
-                      <Eye className="w-4 h-4" />
-                      <span>View</span>
-                    </button>
+              {recentBookings.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    No bookings yet
                   </td>
                 </tr>
-              ))}
+              ) : (
+                recentBookings.map((booking) => (
+                  <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                          <span className="text-indigo-600 font-medium">
+                            {booking.guestName.split(' ').map((n) => n[0]).join('')}
+                          </span>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {booking.guestName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {booking.guestEmail}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{booking.listingTitle}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {new Date(booking.checkIn).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-semibold text-gray-900">
+                        ${booking.totalPrice.toFixed(2)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusColor(
+                          booking.status
+                        )}`}
+                      >
+                        {booking.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

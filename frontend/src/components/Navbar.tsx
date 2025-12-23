@@ -25,6 +25,12 @@ const Navbar = () => {
             <Link to="/hotels" className="text-gray-700 hover:text-blue-600 font-medium transition">
               Hotels
             </Link>
+            <Link to="/host/listings" className="text-gray-700 hover:text-blue-600 font-medium transition">
+              Host Dashboard
+            </Link>
+            <Link to="/admin/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition">
+              Admin
+            </Link>
             <Link to="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
               Login
             </Link>

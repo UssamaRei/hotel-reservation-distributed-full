@@ -9,9 +9,25 @@ public class RMIServer {
         if (args.length > 0) host = args[0];
         System.setProperty("java.rmi.server.hostname", host);
         LocateRegistry.createRegistry(1099);
-        RoomServiceImpl impl = new RoomServiceImpl();
-        String url = String.format("rmi://%s:1099/RoomService", host);
-        Naming.rebind(url, impl);
-        System.out.println("RMI server started and bound at " + url);
+        
+        // Register Room Service
+        RoomServiceImpl roomService = new RoomServiceImpl();
+        String roomUrl = String.format("rmi://%s:1099/RoomService", host);
+        Naming.rebind(roomUrl, roomService);
+        System.out.println("RoomService bound at " + roomUrl);
+        
+        // Register Listing Service
+        ListingServiceImpl listingService = new ListingServiceImpl();
+        String listingUrl = String.format("rmi://%s:1099/ListingService", host);
+        Naming.rebind(listingUrl, listingService);
+        System.out.println("ListingService bound at " + listingUrl);
+        
+        // Register Reservation Service
+        ReservationServiceImpl reservationService = new ReservationServiceImpl();
+        String reservationUrl = String.format("rmi://%s:1099/ReservationService", host);
+        Naming.rebind(reservationUrl, reservationService);
+        System.out.println("ReservationService bound at " + reservationUrl);
+        
+        System.out.println("\nRMI Server started successfully!");
     }
 }

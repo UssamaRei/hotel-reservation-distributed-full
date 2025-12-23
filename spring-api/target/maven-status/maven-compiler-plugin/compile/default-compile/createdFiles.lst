@@ -1,0 +1,17 @@
+com\hotel\shared\model\User.class
+com\hotel\api\controller\FileUploadController.class
+com\hotel\api\controller\ListingController.class
+com\hotel\api\controller\HostController.class
+com\hotel\shared\model\Listing.class
+com\hotel\shared\model\Reservation.class
+com\hotel\api\controller\AdminController.class
+com\hotel\shared\model\Room.class
+com\hotel\shared\service\ReservationService.class
+com\hotel\shared\service\ListingService.class
+com\hotel\api\config\RMIConfig.class
+com\hotel\api\controller\RoomController.class
+com\hotel\api\config\CorsConfig$1.class
+com\hotel\api\HotelApiApplication.class
+com\hotel\api\config\CorsConfig.class
+com\hotel\api\config\WebConfig.class
+com\hotel\shared\service\RoomService.class

@@ -1,0 +1,10 @@
+# Uploaded files - do not commit to Git
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+
+# Keep the directory structure
+!.gitkeep

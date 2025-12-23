@@ -1,5 +1,7 @@
 package com.hotel.api.config;
 
+import com.hotel.shared.service.ListingService;
+import com.hotel.shared.service.ReservationService;
 import com.hotel.shared.service.RoomService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,5 +20,19 @@ public class RMIConfig {
         String url = String.format("rmi://%s:1099/RoomService", rmiHost);
         System.out.println("Looking up RMI service at: " + url);
         return (RoomService) Naming.lookup(url);
+    }
+    
+    @Bean
+    public ListingService listingService() throws Exception {
+        String url = String.format("rmi://%s:1099/ListingService", rmiHost);
+        System.out.println("Looking up ListingService at: " + url);
+        return (ListingService) Naming.lookup(url);
+    }
+    
+    @Bean
+    public ReservationService reservationService() throws Exception {
+        String url = String.format("rmi://%s:1099/ReservationService", rmiHost);
+        System.out.println("Looking up ReservationService at: " + url);
+        return (ReservationService) Naming.lookup(url);
     }
 }
