@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, X, Upload } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const CreateListingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -16,9 +18,6 @@ const CreateListingPage: React.FC = () => {
   const [imageUrl, setImageUrl] = useState('');
   const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
 
-  // TODO: Replace with actual user ID from auth context
-  const currentUserId = 1;
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -28,6 +27,7 @@ const CreateListingPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
 
     try {
@@ -35,7 +35,7 @@ const CreateListingPage: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': currentUserId.toString(),
+          'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
         body: JSON.stringify({
@@ -60,7 +60,7 @@ const CreateListingPage: React.FC = () => {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'X-User-Id': currentUserId.toString(),
+                'X-User-Id': user.id.toString(),
                 'X-User-Role': 'host',
               },
               body: JSON.stringify({ imageUrl }),
@@ -78,7 +78,7 @@ const CreateListingPage: React.FC = () => {
               const uploadResponse = await fetch('http://localhost:8080/api/upload/image', {
                 method: 'POST',
                 headers: {
-                  'X-User-Id': currentUserId.toString(),
+                  'X-User-Id': user.id.toString(),
                   'X-User-Role': 'host',
                 },
                 body: formData,
@@ -92,7 +92,7 @@ const CreateListingPage: React.FC = () => {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'X-User-Id': currentUserId.toString(),
+                    'X-User-Id': user.id.toString(),
                     'X-User-Role': 'host',
                   },
                   body: JSON.stringify({ imageUrl: `http://localhost:8080${uploadData.imageUrl}` }),

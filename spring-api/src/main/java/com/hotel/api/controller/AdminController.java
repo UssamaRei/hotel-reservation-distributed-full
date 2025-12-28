@@ -108,6 +108,36 @@ public class AdminController {
     }
     
     /**
+     * Get single listing by ID
+     * GET /api/admin/listings/{id}
+     */
+    @GetMapping("/listings/{id}")
+    public ResponseEntity<?> getListingById(
+            @PathVariable int id,
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            Listing listing = listingService.getListingById(id);
+            if (listing == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createError("Listing not found"));
+            }
+            
+            return ResponseEntity.ok(listing);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to fetch listing: " + e.getMessage()));
+        }
+    }
+    
+    /**
      * Get all reservations (admin view)
      * GET /api/admin/reservations
      */

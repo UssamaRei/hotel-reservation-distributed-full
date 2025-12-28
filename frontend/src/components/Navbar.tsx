@@ -1,11 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Hotel, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Hotel, Menu, X, LogOut, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -23,17 +32,40 @@ const Navbar = () => {
               Home
             </Link>
             <Link to="/hotels" className="text-gray-700 hover:text-blue-600 font-medium transition">
-              Hotels
+              Apartments
             </Link>
-            <Link to="/host/listings" className="text-gray-700 hover:text-blue-600 font-medium transition">
-              Host Dashboard
-            </Link>
-            <Link to="/admin/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition">
-              Admin
-            </Link>
-            <Link to="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-              Login
-            </Link>
+            {user?.role === 'host' && (
+              <Link to="/host/listings" className="text-gray-700 hover:text-blue-600 font-medium transition">
+                Host Dashboard
+              </Link>
+            )}
+            {user?.role === 'admin' && (
+              <Link to="/admin/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition">
+                Admin
+              </Link>
+            )}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 text-gray-700">
+                  <User className="h-5 w-5" />
+                  <span className="font-medium">{user?.name}</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    {user?.role}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -62,15 +94,52 @@ const Navbar = () => {
               className="block text-gray-700 hover:text-blue-600 font-medium"
               onClick={toggleMenu}
             >
-              Hotels
+              Apartments
             </Link>
-            <Link
-              to="/login"
-              className="block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-center"
-              onClick={toggleMenu}
-            >
-              Login
-            </Link>
+            {user?.role === 'host' && (
+              <Link
+                to="/host/listings"
+                className="block text-gray-700 hover:text-blue-600 font-medium"
+                onClick={toggleMenu}
+              >
+                Host Dashboard
+              </Link>
+            )}
+            {user?.role === 'admin' && (
+              <Link
+                to="/admin/dashboard"
+                className="block text-gray-700 hover:text-blue-600 font-medium"
+                onClick={toggleMenu}
+              >
+                Admin
+              </Link>
+            )}
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center space-x-2 text-gray-700 py-2">
+                  <User className="h-5 w-5" />
+                  <span className="font-medium">{user?.name}</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    {user?.role}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center space-x-2 w-full bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-center"
+                onClick={toggleMenu}
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}

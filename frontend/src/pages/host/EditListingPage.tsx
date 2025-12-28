@@ -69,11 +69,13 @@ const EditListingPage: React.FC = () => {
     setSaving(true);
 
     try {
+      if (!user) return;
+      
       const response = await fetch(`http://localhost:8080/api/host/listings/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': currentUserId.toString(),
+          'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
         body: JSON.stringify({

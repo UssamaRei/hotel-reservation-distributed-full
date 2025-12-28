@@ -140,7 +140,7 @@ const AdminHotelsPage: React.FC = () => {
                 </h3>
                 <p className="text-sm text-gray-600 mb-2 flex items-center">
                   <MapPin className="w-4 h-4 mr-1" />
-                  {listing.city}
+                  {listing.city}{listing.address ? `, ${listing.address}` : ''}
                 </p>
                 <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                   {listing.description}

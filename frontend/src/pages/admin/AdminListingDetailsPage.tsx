@@ -6,7 +6,8 @@ interface Listing {
   id: number;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  address: string;
   pricePerNight: number;
   maxGuests: number;
   bedrooms: number;
@@ -155,7 +156,7 @@ const AdminListingDetailsPage: React.FC = () => {
             <div className="flex items-center space-x-4 text-gray-600 mb-4">
               <div className="flex items-center">
                 <MapPin className="w-5 h-5 mr-1" />
-                <span>{listing.location}</span>
+                <span>{listing.city}{listing.address ? `, ${listing.address}` : ''}</span>
               </div>
               <span className="text-gray-300">|</span>
               <span>Listing ID: #{listing.id}</span>

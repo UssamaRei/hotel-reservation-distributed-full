@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AdminLayout from './components/AdminLayout';
@@ -8,6 +10,7 @@ import HotelsPage from './pages/HotelsPage';
 import HotelDetailsPage from './pages/HotelDetailsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import BecomeHostPage from './pages/BecomeHostPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import AdminHotelsPage from './pages/admin/AdminHotelsPage';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage';
@@ -22,7 +25,8 @@ import HostReservationsPage from './pages/host/HostReservationsPage';
 
 function App() {
   return (
-    <Router>
+    <AuthProvider>
+      <Router>
       <Routes>
         {/* Public routes with Navbar and Footer */}
         <Route
@@ -37,13 +41,34 @@ function App() {
                   <Route path="/hotels/:id" element={<HotelDetailsPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/become-host" element={<BecomeHostPage />} />
                   
-                  {/* Host routes */}
-                  <Route path="/host/listings" element={<HostListingsPage />} />
-                  <Route path="/host/listings/new" element={<CreateListingPage />} />
-                  <Route path="/host/listings/:id" element={<ViewListingPage />} />
-                  <Route path="/host/listings/:id/edit" element={<EditListingPage />} />
-                  <Route path="/host/reservations" element={<HostReservationsPage />} />
+                  {/* Host routes - Protected */}
+                  <Route path="/host/listings" element={
+                    <ProtectedRoute requireRole="host">
+                      <HostListingsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/host/listings/new" element={
+                    <ProtectedRoute requireRole="host">
+                      <CreateListingPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/host/listings/:id" element={
+                    <ProtectedRoute requireRole="host">
+                      <ViewListingPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/host/listings/:id/edit" element={
+                    <ProtectedRoute requireRole="host">
+                      <EditListingPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/host/reservations" element={
+                    <ProtectedRoute requireRole="host">
+                      <HostReservationsPage />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </main>
               <Footer />
@@ -51,8 +76,12 @@ function App() {
           }
         />
 
-        {/* Admin routes with AdminLayout (no Navbar/Footer) */}
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* Admin routes with AdminLayout (no Navbar/Footer) - Protected */}
+        <Route path="/admin" element={
+          <ProtectedRoute requireRole="admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="hotels" element={<AdminHotelsPage />} />
           <Route path="bookings" element={<AdminBookingsPage />} />
@@ -64,6 +93,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 

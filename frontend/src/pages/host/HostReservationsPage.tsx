@@ -30,11 +30,13 @@ const HostReservationsPage: React.FC = () => {
   }, []);
 
   const fetchReservations = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       const response = await fetch('http://localhost:8080/api/host/reservations', {
         headers: {
-          'X-User-Id': currentUserId.toString(),
+          'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
       });
@@ -54,11 +56,13 @@ const HostReservationsPage: React.FC = () => {
 
   const updateStatus = async (reservationId: number, newStatus: string) => {
     try {
+      if (!user) return;
+      
       const response = await fetch(`http://localhost:8080/api/host/reservations/${reservationId}/status`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': currentUserId.toString(),
+          'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
         body: JSON.stringify({ status: newStatus }),

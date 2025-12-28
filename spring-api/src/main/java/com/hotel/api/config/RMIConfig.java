@@ -3,6 +3,7 @@ package com.hotel.api.config;
 import com.hotel.shared.service.ListingService;
 import com.hotel.shared.service.ReservationService;
 import com.hotel.shared.service.RoomService;
+import com.hotel.shared.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,5 +35,12 @@ public class RMIConfig {
         String url = String.format("rmi://%s:1099/ReservationService", rmiHost);
         System.out.println("Looking up ReservationService at: " + url);
         return (ReservationService) Naming.lookup(url);
+    }
+    
+    @Bean
+    public UserService userService() throws Exception {
+        String url = String.format("rmi://%s:1099/UserService", rmiHost);
+        System.out.println("Looking up UserService at: " + url);
+        return (UserService) Naming.lookup(url);
     }
 }

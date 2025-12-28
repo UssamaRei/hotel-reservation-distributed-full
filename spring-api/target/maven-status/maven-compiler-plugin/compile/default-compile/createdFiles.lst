@@ -1,5 +1,7 @@
 com\hotel\shared\model\User.class
 com\hotel\api\controller\FileUploadController.class
+com\hotel\shared\service\UserService.class
+com\hotel\api\controller\AuthController.class
 com\hotel\api\controller\ListingController.class
 com\hotel\api\controller\HostController.class
 com\hotel\shared\model\Listing.class

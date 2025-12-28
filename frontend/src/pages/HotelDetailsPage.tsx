@@ -1,13 +1,31 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Star, ArrowLeft, Check, Calendar, Users } from 'lucide-react';
-import { mockHotels } from '../data/mockData';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { MapPin, Star, ArrowLeft, Check, Calendar, Users, Image as ImageIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+
+interface Listing {
+  id: number;
+  title: string;
+  description: string;
+  city: string;
+  address: string;
+  pricePerNight: number;
+  maxGuests: number;
+  userId: number;
+  imageUrls: string[];
+  amenities?: string[];
+  status: string;
+}
 
 const HotelDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user } = useAuth();
   
-  const hotel = mockHotels.find(h => h.id === parseInt(id || '0'));
+  const [listing, setListing] = React.useState<Listing | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
 
   const [bookingData, setBookingData] = React.useState({
     checkIn: '',
@@ -15,16 +33,55 @@ const HotelDetailsPage = () => {
     guests: '2'
   });
 
-  if (!hotel) {
+  React.useEffect(() => {
+    fetchListing();
+  }, [id]);
+
+  const fetchListing = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`http://localhost:8080/api/admin/listings/${id}`, {
+        headers: {
+          'X-User-Id': '1',
+          'X-User-Role': 'admin',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch listing');
+      }
+
+      const data = await response.json();
+      setListing(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Hotel Not Found</h2>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading apartment details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !listing) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Apartment Not Found</h2>
+          <p className="text-gray-600 mb-4">{error || 'The apartment you are looking for does not exist.'}</p>
           <button
             onClick={() => navigate('/hotels')}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
           >
-            Back to Hotels
+            Back to Apartments
           </button>
         </div>
       </div>
@@ -33,9 +90,19 @@ const HotelDetailsPage = () => {
 
   const handleReserve = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Reservation:', { hotel: hotel.name, ...bookingData });
-    alert(`Reservation request sent for ${hotel.name}!`);
+    
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      // Redirect to login with return URL
+      navigate('/login', { state: { from: location }, replace: false });
+      return;
+    }
+    
+    console.log('Reservation:', { listing: listing.title, user: user?.email, ...bookingData });
+    alert(`Reservation request sent for ${listing.title}!\nUser: ${user?.email}`);
   };
+
+  const locationString = `${listing.city || ''}${listing.address ? ', ' + listing.address : ''}`;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -46,63 +113,91 @@ const HotelDetailsPage = () => {
           className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-6 transition"
         >
           <ArrowLeft className="h-5 w-5" />
-          Back to Hotels
+          Back to Apartments
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Hero Image */}
-            <div className="relative h-96 rounded-2xl overflow-hidden mb-8 shadow-xl">
-              <img
-                src={hotel.image}
-                alt={hotel.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-6 right-6 bg-white px-4 py-2 rounded-full shadow-lg">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-bold text-lg">{hotel.rating}</span>
+            <div className="relative h-96 rounded-2xl overflow-hidden mb-8 shadow-xl bg-gray-200">
+              {listing.imageUrls && listing.imageUrls.length > 0 ? (
+                <img
+                  src={listing.imageUrls[0]}
+                  alt={listing.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <ImageIcon className="w-16 h-16 text-gray-400" />
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Hotel Info */}
+            {/* Listing Info */}
             <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">{hotel.name}</h1>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">{listing.title}</h1>
               
               <div className="flex items-center text-gray-600 mb-6">
                 <MapPin className="h-5 w-5 mr-2" />
-                <span className="text-lg">{hotel.location}</span>
+                <span className="text-lg">{locationString || 'Location not specified'}</span>
               </div>
 
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Hotel</h2>
-                <p className="text-gray-700 leading-relaxed text-lg">{hotel.description}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Apartment</h2>
+                <p className="text-gray-700 leading-relaxed text-lg">{listing.description}</p>
+              </div>
+
+              {/* Max Guests Info */}
+              <div className="mb-8 bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  <span className="text-gray-800 font-medium">Maximum {listing.maxGuests} guests</span>
+                </div>
               </div>
 
               {/* Amenities */}
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Amenities</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {hotel.amenities.map((amenity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg"
-                    >
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Check className="h-5 w-5 text-blue-600" />
+              {listing.amenities && listing.amenities.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Amenities</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {listing.amenities.map((amenity, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg"
+                      >
+                        <div className="bg-blue-100 p-2 rounded-full">
+                          <Check className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <span className="text-gray-800 font-medium">{amenity}</span>
                       </div>
-                      <span className="text-gray-800 font-medium">{amenity}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Additional Images */}
+            {listing.imageUrls && listing.imageUrls.length > 1 && (
+              <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">More Photos</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {listing.imageUrls.slice(1).map((imageUrl, index) => (
+                    <div key={index} className="relative h-48 rounded-lg overflow-hidden bg-gray-200">
+                      <img
+                        src={imageUrl}
+                        alt={`${listing.title} - Image ${index + 2}`}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Additional Info */}
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Hotel Policies</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Policies</h2>
               <div className="space-y-4 text-gray-700">
                 <div>
                   <h3 className="font-semibold mb-2">Check-in</h3>
@@ -129,7 +224,7 @@ const HotelDetailsPage = () => {
             <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-24">
               <div className="border-b border-gray-200 pb-6 mb-6">
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-bold text-blue-600">${hotel.price}</span>
+                  <span className="text-4xl font-bold text-blue-600">${listing.pricePerNight}</span>
                   <span className="text-gray-600">/night</span>
                 </div>
                 <p className="text-sm text-gray-500">Taxes and fees included</p>
@@ -182,10 +277,11 @@ const HotelDetailsPage = () => {
                       value={bookingData.guests}
                       onChange={(e) => setBookingData({ ...bookingData, guests: e.target.value })}
                     >
-                      <option value="1">1 Guest</option>
-                      <option value="2">2 Guests</option>
-                      <option value="3">3 Guests</option>
-                      <option value="4">4+ Guests</option>
+                      {[...Array(Math.min(listing.maxGuests, 10))].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {i + 1} {i === 0 ? 'Guest' : 'Guests'}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -207,7 +303,7 @@ const HotelDetailsPage = () => {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Total before taxes</span>
-                  <span className="font-semibold">${hotel.price}</span>
+                  <span className="font-semibold">${listing.pricePerNight}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Service fee</span>

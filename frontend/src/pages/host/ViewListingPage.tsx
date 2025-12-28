@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, MapPin, DollarSign, Users, Image as ImageIcon, Upload } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface Listing {
   id: number;
@@ -16,14 +17,13 @@ interface Listing {
 const ViewListingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
-
-  const currentUserId = 1;
 
   useEffect(() => {
     fetchListing();
@@ -57,12 +57,13 @@ const ViewListingPage: React.FC = () => {
       if (uploadMethod === 'url') {
         // Upload via URL
         if (!imageUrl.trim()) return;
+        if (!user) return;
 
         const response = await fetch(`http://localhost:8080/api/host/listings/${id}/images`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-User-Id': currentUserId.toString(),
+            'X-User-Id': user.id.toString(),
             'X-User-Role': 'host',
           },
           body: JSON.stringify({ imageUrl }),
@@ -90,7 +91,7 @@ const ViewListingPage: React.FC = () => {
         const uploadResponse = await fetch('http://localhost:8080/api/upload/image', {
           method: 'POST',
           headers: {
-            'X-User-Id': currentUserId.toString(),
+            'X-User-Id': user.id.toString(),
             'X-User-Role': 'host',
           },
           body: formData,
@@ -107,7 +108,7 @@ const ViewListingPage: React.FC = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-User-Id': currentUserId.toString(),
+            'X-User-Id': user.id.toString(),
             'X-User-Role': 'host',
           },
           body: JSON.stringify({ imageUrl: `http://localhost:8080${uploadData.imageUrl}` }),

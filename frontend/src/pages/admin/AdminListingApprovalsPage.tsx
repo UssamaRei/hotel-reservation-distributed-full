@@ -6,7 +6,8 @@ interface Listing {
   id: number;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  address: string;
   pricePerNight: number;
   maxGuests: number;
   bedrooms: number;
@@ -242,7 +243,7 @@ const AdminListingApprovalsPage: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm text-gray-900">
                         <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-                        {listing.location}
+                        {listing.city}{listing.address ? `, ${listing.address}` : ''}
                       </div>
                     </td>
                     <td className="px-6 py-4">

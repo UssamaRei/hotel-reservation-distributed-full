@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, DollarSign, Users, Home } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface Listing {
   id: number;
@@ -11,26 +12,30 @@ interface Listing {
   pricePerNight: number;
   maxGuests: number;
   imageUrls: string[];
+  userId: number;
+  status?: 'pending' | 'approved' | 'rejected';
 }
 
 const HostListingsPage: React.FC = () => {
+  const { user } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // TODO: Replace with actual user ID from auth context
-  const currentUserId = 1;
-
   useEffect(() => {
-    fetchMyListings();
-  }, []);
+    if (user) {
+      fetchMyListings();
+    }
+  }, [user]);
 
   const fetchMyListings = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
       const response = await fetch('http://localhost:8080/api/host/listings', {
         headers: {
-          'X-User-Id': currentUserId.toString(),
+          'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
       });
@@ -40,7 +45,14 @@ const HostListingsPage: React.FC = () => {
       }
 
       const data = await response.json();
-      setListings(data);
+      // Filter to show only this host's listings
+      const myListings = data.filter((listing: Listing) => listing.userId === user.id);
+      // Set default status if not present
+      const listingsWithStatus = myListings.map((listing: Listing) => ({
+        ...listing,
+        status: listing.status || 'approved'
+      }));
+      setListings(listingsWithStatus);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -49,6 +61,8 @@ const HostListingsPage: React.FC = () => {
   };
 
   const handleDelete = async (listingId: number) => {
+    if (!user) return;
+
     if (!confirm('Are you sure you want to delete this listing?')) {
       return;
     }
@@ -57,7 +71,7 @@ const HostListingsPage: React.FC = () => {
       const response = await fetch(`http://localhost:8080/api/host/listings/${listingId}`, {
         method: 'DELETE',
         headers: {
-          'X-User-Id': currentUserId.toString(),
+          'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
       });
@@ -71,6 +85,34 @@ const HostListingsPage: React.FC = () => {
       alert('Listing deleted successfully!');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete listing');
+    }
+  };
+
+  const getStatusColor = (status?: string) => {
+    if (!status) return 'bg-gray-100 text-gray-800';
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status?: string) => {
+    if (!status) return 'Unknown';
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'Approved';
+      case 'pending':
+        return 'Pending Review';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return status;
     }
   };
 
@@ -193,6 +235,13 @@ const HostListingsPage: React.FC = () => {
                       ${listing.pricePerNight}/night
                     </span>
                   </div>
+                  {listing.status && (
+                    <div className="absolute top-4 left-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(listing.status)}`}>
+                        {getStatusLabel(listing.status)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -201,7 +250,7 @@ const HostListingsPage: React.FC = () => {
                     {listing.title}
                   </h3>
                   <p className="text-sm text-gray-600 mb-2 flex items-center">
-                    <span>📍 {listing.city}</span>
+                    <span>📍 {listing.city}{listing.address ? `, ${listing.address}` : ''}</span>
                   </p>
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                     {listing.description}

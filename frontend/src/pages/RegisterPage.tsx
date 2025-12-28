@@ -13,8 +13,10 @@ const RegisterPage = () => {
   });
 
   const [passwordMatch, setPasswordMatch] = React.useState(true);
+  const [error, setError] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
@@ -27,9 +29,38 @@ const RegisterPage = () => {
       return;
     }
 
-    console.log('Register:', formData);
-    alert(`Account created successfully!\nWelcome, ${formData.name}!`);
-    navigate('/login');
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: 'guest'
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || 'Registration failed');
+        setLoading(false);
+        return;
+      }
+
+      alert(`Account created successfully!\nWelcome, ${formData.name}!`);
+      navigate('/login');
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError('Failed to register. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   React.useEffect(() => {
@@ -154,12 +185,20 @@ const RegisterPage = () => {
               </label>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              disabled={loading}
+              className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 

@@ -28,6 +28,12 @@ public class RMIServer {
         Naming.rebind(reservationUrl, reservationService);
         System.out.println("ReservationService bound at " + reservationUrl);
         
+        // Register User Service
+        UserServiceImpl userService = new UserServiceImpl();
+        String userUrl = String.format("rmi://%s:1099/UserService", host);
+        Naming.rebind(userUrl, userService);
+        System.out.println("UserService bound at " + userUrl);
+        
         System.out.println("\nRMI Server started successfully!");
     }
 }

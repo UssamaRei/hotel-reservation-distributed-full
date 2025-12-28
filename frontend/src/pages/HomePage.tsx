@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Calendar, Users } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, Home } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
+  const { user } = useAuth();
   const [searchData, setSearchData] = React.useState({
     location: '',
     checkIn: '',
@@ -176,6 +178,27 @@ const HomePage = () => {
           ))}
         </div>
       </div>
+
+      {/* Become a Host CTA - Show only for non-hosts */}
+      {user?.role === 'guest' && (
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 py-16">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <Home className="h-16 w-16 text-white mx-auto mb-4" />
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Earn Money as a Host
+            </h2>
+            <p className="text-xl text-blue-100 mb-8">
+              Share your space and start earning. It's easy to get started!
+            </p>
+            <Link
+              to="/become-host"
+              className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg hover:bg-gray-100 transition font-semibold text-lg shadow-lg"
+            >
+              Become a Host
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
