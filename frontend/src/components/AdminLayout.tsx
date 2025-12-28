@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   X,
+  ClipboardCheck,
 } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
@@ -20,6 +21,7 @@ const AdminLayout: React.FC = () => {
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/hotels', icon: Hotel, label: 'Hotels' },
     { path: '/admin/bookings', icon: Calendar, label: 'Bookings' },
+    { path: '/admin/approvals', icon: ClipboardCheck, label: 'Listing Approvals' },
     { path: '/admin/customers', icon: Users, label: 'Customers' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];

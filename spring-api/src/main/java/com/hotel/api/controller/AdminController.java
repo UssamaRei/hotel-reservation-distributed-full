@@ -263,6 +263,68 @@ public class AdminController {
         }
     }
     
+    /**
+     * Approve a listing
+     * PATCH /api/admin/listings/{id}/approve
+     */
+    @PatchMapping("/listings/{id}/approve")
+    public ResponseEntity<?> approveListing(
+            @PathVariable int id,
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            boolean updated = listingService.updateListingStatus(id, "approved");
+            
+            if (updated) {
+                return ResponseEntity.ok(createSuccess("Listing approved successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createError("Listing not found"));
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to approve listing: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Reject a listing
+     * PATCH /api/admin/listings/{id}/reject
+     */
+    @PatchMapping("/listings/{id}/reject")
+    public ResponseEntity<?> rejectListing(
+            @PathVariable int id,
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            boolean updated = listingService.updateListingStatus(id, "rejected");
+            
+            if (updated) {
+                return ResponseEntity.ok(createSuccess("Listing rejected successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createError("Listing not found"));
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to reject listing: " + e.getMessage()));
+        }
+    }
+    
     private Map<String, Object> createError(String message) {
         Map<String, Object> error = new HashMap<>();
         error.put("success", false);

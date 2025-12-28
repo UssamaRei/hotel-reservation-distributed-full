@@ -73,4 +73,13 @@ public interface ListingService extends Remote {
      * @throws NotFoundException If listing doesn't exist
      */
     void addListingImage(int listingId, String imageUrl, int currentUserId) throws RemoteException, AuthorizationException, NotFoundException;
+    
+    /**
+     * Update listing status (admin only)
+     * @param listingId The ID of the listing
+     * @param status The new status (pending, approved, rejected)
+     * @throws RemoteException If RMI communication fails
+     * @throws NotFoundException If listing doesn't exist
+     */
+    boolean updateListingStatus(int listingId, String status) throws RemoteException, NotFoundException;
 }

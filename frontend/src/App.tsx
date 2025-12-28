@@ -11,6 +11,9 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import AdminHotelsPage from './pages/admin/AdminHotelsPage';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage';
+import AdminBookingDetailsPage from './pages/admin/AdminBookingDetailsPage';
+import AdminListingApprovalsPage from './pages/admin/AdminListingApprovalsPage';
+import AdminListingDetailsPage from './pages/admin/AdminListingDetailsPage';
 import HostListingsPage from './pages/host/HostListingsPage';
 import CreateListingPage from './pages/host/CreateListingPage';
 import ViewListingPage from './pages/host/ViewListingPage';
@@ -53,6 +56,9 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="hotels" element={<AdminHotelsPage />} />
           <Route path="bookings" element={<AdminBookingsPage />} />
+          <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
+          <Route path="approvals" element={<AdminListingApprovalsPage />} />
+          <Route path="listings/:id" element={<AdminListingDetailsPage />} />
           <Route path="customers" element={<div className="text-center py-12 text-gray-500">Customers Management - Coming Soon</div>} />
           <Route path="settings" element={<div className="text-center py-12 text-gray-500">Settings - Coming Soon</div>} />
         </Route>

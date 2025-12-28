@@ -17,6 +17,7 @@ public class Listing implements Serializable {
     private String city;
     private BigDecimal pricePerNight;
     private int maxGuests;
+    private String status; // pending, approved, rejected
     private Timestamp createdAt;
     private List<String> imageUrls;
     
@@ -47,6 +48,9 @@ public class Listing implements Serializable {
     
     public int getMaxGuests() { return maxGuests; }
     public void setMaxGuests(int maxGuests) { this.maxGuests = maxGuests; }
+    
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
     
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

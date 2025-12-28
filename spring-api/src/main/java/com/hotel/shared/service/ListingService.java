@@ -13,4 +13,5 @@ public interface ListingService extends Remote {
     Listing getListingById(int listingId) throws RemoteException, Exception;
     List<Listing> getAllListings() throws RemoteException;
     void addListingImage(int listingId, String imageUrl, int currentUserId) throws RemoteException, Exception;
+    boolean updateListingStatus(int listingId, String status) throws RemoteException, Exception;
 }

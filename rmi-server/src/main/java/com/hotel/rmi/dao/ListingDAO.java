@@ -15,8 +15,8 @@ public class ListingDAO {
      * Create a new listing
      */
     public Listing create(Listing listing) throws SQLException {
-        String sql = "INSERT INTO listings (user_id, title, description, address, city, price_per_night, max_guests) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO listings (user_id, title, description, address, city, price_per_night, max_guests, status) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -28,6 +28,7 @@ public class ListingDAO {
             stmt.setString(5, listing.getCity());
             stmt.setBigDecimal(6, listing.getPricePerNight());
             stmt.setInt(7, listing.getMaxGuests());
+            stmt.setString(8, listing.getStatus() != null ? listing.getStatus() : "pending");
             
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
@@ -52,7 +53,7 @@ public class ListingDAO {
      */
     public boolean update(Listing listing, int currentUserId) throws SQLException {
         String sql = "UPDATE listings SET title = ?, description = ?, address = ?, city = ?, " +
-                     "price_per_night = ?, max_guests = ? WHERE id = ? AND user_id = ?";
+                     "price_per_night = ?, max_guests = ?, status = ? WHERE id = ? AND user_id = ?";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -63,8 +64,9 @@ public class ListingDAO {
             stmt.setString(4, listing.getCity());
             stmt.setBigDecimal(5, listing.getPricePerNight());
             stmt.setInt(6, listing.getMaxGuests());
-            stmt.setInt(7, listing.getId());
-            stmt.setInt(8, currentUserId);
+            stmt.setString(7, listing.getStatus());
+            stmt.setInt(8, listing.getId());
+            stmt.setInt(9, currentUserId);
             
             int affectedRows = stmt.executeUpdate();
             
@@ -73,6 +75,28 @@ public class ListingDAO {
                 return true;
             }
             return false; // Either doesn't exist or user doesn't own it
+        }
+    }
+    
+    /**
+     * Update listing status (admin only - no ownership check)
+     */
+    public boolean updateStatus(int listingId, String status) throws SQLException {
+        String sql = "UPDATE listings SET status = ? WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, status);
+            stmt.setInt(2, listingId);
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows > 0) {
+                logger.info("Updated listing status: " + listingId + " to " + status);
+                return true;
+            }
+            return false;
         }
     }
     
@@ -220,6 +244,7 @@ public class ListingDAO {
         listing.setCity(rs.getString("city"));
         listing.setPricePerNight(rs.getBigDecimal("price_per_night"));
         listing.setMaxGuests(rs.getInt("max_guests"));
+        listing.setStatus(rs.getString("status"));
         listing.setCreatedAt(rs.getTimestamp("created_at"));
         return listing;
     }

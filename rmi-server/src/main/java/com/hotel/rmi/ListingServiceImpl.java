@@ -168,4 +168,31 @@ public class ListingServiceImpl extends UnicastRemoteObject implements ListingSe
             throw new RemoteException("Failed to add image: " + e.getMessage(), e);
         }
     }
+    
+    @Override
+    public boolean updateListingStatus(int listingId, String status) 
+            throws RemoteException, NotFoundException {
+        try {
+            logger.info("Updating listing status: " + listingId + " to " + status);
+            
+            // Check if listing exists
+            Listing existing = listingDAO.findById(listingId);
+            if (existing == null) {
+                throw new NotFoundException("Listing not found with ID: " + listingId);
+            }
+            
+            // Update status
+            boolean updated = listingDAO.updateStatus(listingId, status);
+            
+            if (!updated) {
+                logger.warning("Failed to update status for listing: " + listingId);
+            }
+            
+            return updated;
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error updating listing status", e);
+            throw new RemoteException("Failed to update listing status: " + e.getMessage(), e);
+        }
+    }
 }

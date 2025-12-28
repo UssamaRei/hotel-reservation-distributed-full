@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar, Trash2, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Reservation {
   id: number;
@@ -16,6 +17,7 @@ interface Reservation {
 }
 
 const AdminBookingsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -240,6 +242,13 @@ const AdminBookingsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <button
+                        onClick={() => navigate(`/admin/bookings/${reservation.id}`)}
+                        className="text-indigo-600 hover:text-indigo-800"
+                        title="View Details"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
                       {reservation.status === 'pending' && (
                         <>
                           <button
