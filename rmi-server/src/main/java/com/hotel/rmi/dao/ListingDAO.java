@@ -232,6 +232,32 @@ public class ListingDAO {
     }
     
     /**
+     * Delete all listings for a user (for banning)
+     */
+    public boolean deleteByUserId(int userId) throws SQLException {
+        // First delete all listing images
+        String deleteImagesSql = "DELETE FROM listing_images WHERE listing_id IN (SELECT id FROM listings WHERE user_id = ?)";
+        String deleteListingsSql = "DELETE FROM listings WHERE user_id = ?";
+        
+        try (Connection conn = DBConnection.getConnection()) {
+            // Delete images first (foreign key constraint)
+            try (PreparedStatement stmt = conn.prepareStatement(deleteImagesSql)) {
+                stmt.setInt(1, userId);
+                stmt.executeUpdate();
+            }
+            
+            // Then delete listings
+            try (PreparedStatement stmt = conn.prepareStatement(deleteListingsSql)) {
+                stmt.setInt(1, userId);
+                int affectedRows = stmt.executeUpdate();
+                logger.info("Deleted " + affectedRows + " listings for user: " + userId);
+            }
+            
+            return true;
+        }
+    }
+    
+    /**
      * Map ResultSet to Listing object
      */
     private Listing mapResultSetToListing(ResultSet rs) throws SQLException {

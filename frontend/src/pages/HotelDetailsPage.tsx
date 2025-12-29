@@ -26,6 +26,7 @@ const HotelDetailsPage = () => {
   const [listing, setListing] = React.useState<Listing | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  const [bookedDates, setBookedDates] = React.useState<Array<{checkIn: string, checkOut: string}>>([]);
 
   const [bookingData, setBookingData] = React.useState({
     checkIn: '',
@@ -35,6 +36,9 @@ const HotelDetailsPage = () => {
 
   React.useEffect(() => {
     fetchListing();
+    if (id) {
+      fetchBookedDates();
+    }
   }, [id]);
 
   const fetchListing = async () => {
@@ -58,6 +62,39 @@ const HotelDetailsPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchBookedDates = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/listings/${id}/booked-dates`);
+      if (response.ok) {
+        const data = await response.json();
+        setBookedDates(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch booked dates:', err);
+    }
+  };
+
+  const isDateBooked = (date: string): boolean => {
+    const checkDate = new Date(date);
+    return bookedDates.some(booking => {
+      const checkIn = new Date(booking.checkIn);
+      const checkOut = new Date(booking.checkOut);
+      return checkDate >= checkIn && checkDate < checkOut;
+    });
+  };
+
+  const getMinCheckInDate = (): string => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const getMinCheckOutDate = (): string => {
+    if (!bookingData.checkIn) return '';
+    const checkIn = new Date(bookingData.checkIn);
+    checkIn.setDate(checkIn.getDate() + 1);
+    return checkIn.toISOString().split('T')[0];
   };
 
   if (loading) {
@@ -88,18 +125,82 @@ const HotelDetailsPage = () => {
     );
   }
 
-  const handleReserve = (e: React.FormEvent) => {
+  const handleReserve = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Check if user is authenticated
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       // Redirect to login with return URL
       navigate('/login', { state: { from: location }, replace: false });
       return;
     }
     
-    console.log('Reservation:', { listing: listing.title, user: user?.email, ...bookingData });
-    alert(`Reservation request sent for ${listing.title}!\nUser: ${user?.email}`);
+    // Validate dates
+    if (!bookingData.checkIn || !bookingData.checkOut) {
+      alert('Please select check-in and check-out dates');
+      return;
+    }
+    
+    if (new Date(bookingData.checkIn) >= new Date(bookingData.checkOut)) {
+      alert('Check-out date must be after check-in date');
+      return;
+    }
+
+    // Check if selected dates overlap with booked dates
+    const checkIn = bookingData.checkIn;
+    const checkOut = bookingData.checkOut;
+    
+    for (const booking of bookedDates) {
+      if (checkIn < booking.checkOut && checkOut > booking.checkIn) {
+        alert('Some of the selected dates are already booked. Please choose different dates.');
+        return;
+      }
+    }
+    
+    try {
+      // Calculate total price (number of nights * price per night)
+      const checkIn = new Date(bookingData.checkIn);
+      const checkOut = new Date(bookingData.checkOut);
+      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+      const totalPrice = nights * listing.pricePerNight;
+      
+      const reservationData = {
+        listingId: listing.id,
+        userId: user.id,
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        totalPrice: totalPrice,
+        status: 'pending',
+        guests: parseInt(bookingData.guests) || 2
+      };
+      
+      const response = await fetch('http://localhost:8080/api/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': user.id.toString()
+        },
+        body: JSON.stringify(reservationData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create reservation');
+      }
+      
+      const createdReservation = await response.json();
+      alert(`Reservation confirmed for ${listing.title}!\nTotal: $${totalPrice} for ${nights} night(s)\nStatus: Pending approval`);
+      
+      // Reset form
+      setBookingData({
+        checkIn: '',
+        checkOut: '',
+        guests: '2'
+      });
+    } catch (err) {
+      console.error('Reservation error:', err);
+      alert(err instanceof Error ? err.message : 'Failed to create reservation. Please try again.');
+    }
   };
 
   const locationString = `${listing.city || ''}${listing.address ? ', ' + listing.address : ''}`;
@@ -242,10 +343,24 @@ const HotelDetailsPage = () => {
                       type="date"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={bookingData.checkIn}
-                      onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
+                      min={getMinCheckInDate()}
+                      onChange={(e) => {
+                        const selectedDate = e.target.value;
+                        if (isDateBooked(selectedDate)) {
+                          alert('This date is already booked. Please select another date.');
+                          e.target.value = '';
+                          return;
+                        }
+                        setBookingData({ ...bookingData, checkIn: selectedDate, checkOut: '' });
+                      }}
                       required
                     />
                   </div>
+                  {bookedDates.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Some dates may be unavailable due to existing bookings
+                    </p>
+                  )}
                 </div>
 
                 {/* Check-out Date */}
@@ -259,10 +374,39 @@ const HotelDetailsPage = () => {
                       type="date"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={bookingData.checkOut}
-                      onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
+                      min={getMinCheckOutDate()}
+                      disabled={!bookingData.checkIn}
+                      onChange={(e) => {
+                        const selectedDate = e.target.value;
+                        // Check if any date in the range is booked
+                        const checkIn = new Date(bookingData.checkIn);
+                        const checkOut = new Date(selectedDate);
+                        let hasBookedDate = false;
+                        
+                        for (let d = new Date(checkIn); d < checkOut; d.setDate(d.getDate() + 1)) {
+                          const dateStr = d.toISOString().split('T')[0];
+                          if (isDateBooked(dateStr)) {
+                            hasBookedDate = true;
+                            break;
+                          }
+                        }
+                        
+                        if (hasBookedDate) {
+                          alert('Some dates in this range are already booked. Please select a different check-out date.');
+                          e.target.value = '';
+                          return;
+                        }
+                        
+                        setBookingData({ ...bookingData, checkOut: selectedDate });
+                      }}
                       required
                     />
                   </div>
+                  {!bookingData.checkIn && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Please select check-in date first
+                    </p>
+                  )}
                 </div>
 
                 {/* Guests */}

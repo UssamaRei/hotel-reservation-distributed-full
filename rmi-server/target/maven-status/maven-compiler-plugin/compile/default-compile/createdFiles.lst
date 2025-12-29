@@ -4,8 +4,6 @@ com\hotel\shared\exception\NotFoundException.class
 com\hotel\shared\service\UserService.class
 com\hotel\rmi\ListingServiceImpl.class
 com\hotel\rmi\ReservationServiceImpl.class
-com\hotel\rmi\UserServiceImpl.class
-com\hotel\rmi\RMIServer.class
 com\hotel\shared\model\Listing.class
 com\hotel\shared\model\Reservation.class
 com\hotel\shared\model\Room.class

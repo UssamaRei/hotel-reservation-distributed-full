@@ -1,6 +1,8 @@
 package com.hotel.rmi;
 
 import com.hotel.rmi.dao.UserDAO;
+import com.hotel.rmi.dao.ListingDAO;
+import com.hotel.rmi.dao.ReservationDAO;
 import com.hotel.shared.exception.AuthorizationException;
 import com.hotel.shared.exception.NotFoundException;
 import com.hotel.shared.model.User;
@@ -9,6 +11,7 @@ import com.hotel.shared.service.UserService;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,10 +19,14 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
     private final UserDAO userDAO;
+    private final ListingDAO listingDAO;
+    private final ReservationDAO reservationDAO;
     
     public UserServiceImpl() throws RemoteException {
         super();
         this.userDAO = new UserDAO();
+        this.listingDAO = new ListingDAO();
+        this.reservationDAO = new ReservationDAO();
     }
     
     @Override
@@ -113,6 +120,51 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
             throw new RemoteException("Failed to update user role: " + e.getMessage(), e);
         } catch (NotFoundException e) {
             throw new RemoteException(e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public List<User> getAllUsers() throws RemoteException {
+        try {
+            logger.info("Getting all users");
+            List<User> users = userDAO.findAll();
+            
+            // Don't return passwords
+            for (User user : users) {
+                user.setPassword(null);
+            }
+            
+            return users;
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error getting all users", e);
+            throw new RemoteException("Failed to get users: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public boolean banUser(int userId) throws RemoteException {
+        try {
+            logger.info("Banning user: " + userId);
+            
+            // Delete all user's reservations
+            reservationDAO.deleteByUserId(userId);
+            
+            // Delete all user's listings
+            listingDAO.deleteByUserId(userId);
+            
+            // Ban the user
+            boolean banned = userDAO.ban(userId);
+            
+            if (banned) {
+                logger.info("User banned and all their data removed: " + userId);
+            }
+            
+            return banned;
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error banning user", e);
+            throw new RemoteException("Failed to ban user: " + e.getMessage(), e);
         }
     }
 }

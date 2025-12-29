@@ -1,12 +1,15 @@
 package com.hotel.api.controller;
 
 import com.hotel.shared.model.Listing;
+import com.hotel.shared.model.Reservation;
 import com.hotel.shared.service.ListingService;
+import com.hotel.shared.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +24,9 @@ public class ListingController {
     
     @Autowired
     private ListingService listingService;
+    
+    @Autowired
+    private ReservationService reservationService;
     
     /**
      * Get all listings (public access)
@@ -79,6 +85,35 @@ public class ListingController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createError("Failed to search listings: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get booked dates for a listing (public access)
+     * GET /api/listings/{id}/booked-dates
+     */
+    @GetMapping("/{id}/booked-dates")
+    public ResponseEntity<?> getBookedDates(@PathVariable int id) {
+        try {
+            List<Reservation> allReservations = reservationService.getAllReservations();
+            
+            // Filter both pending and confirmed reservations for this listing to prevent double-booking
+            List<Map<String, String>> bookedDates = new ArrayList<>();
+            for (Reservation reservation : allReservations) {
+                if (reservation.getListingId() == id && 
+                    ("confirmed".equalsIgnoreCase(reservation.getStatus()) ||
+                     "pending".equalsIgnoreCase(reservation.getStatus()))) {
+                    Map<String, String> dateRange = new HashMap<>();
+                    dateRange.put("checkIn", reservation.getCheckIn() != null ? reservation.getCheckIn().toString() : "");
+                    dateRange.put("checkOut", reservation.getCheckOut() != null ? reservation.getCheckOut().toString() : "");
+                    bookedDates.add(dateRange);
+                }
+            }
+            
+            return ResponseEntity.ok(bookedDates);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to fetch booked dates: " + e.getMessage()));
         }
     }
     

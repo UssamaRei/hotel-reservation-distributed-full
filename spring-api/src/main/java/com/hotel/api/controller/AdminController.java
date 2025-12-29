@@ -5,12 +5,14 @@ import com.hotel.shared.model.Reservation;
 import com.hotel.shared.model.User;
 import com.hotel.shared.service.ListingService;
 import com.hotel.shared.service.ReservationService;
+import com.hotel.shared.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,9 @@ public class AdminController {
     
     @Autowired
     private ReservationService reservationService;
+    
+    @Autowired
+    private UserService userService;
     
     /**
      * Get dashboard statistics
@@ -84,7 +89,7 @@ public class AdminController {
     }
     
     /**
-     * Get all listings (admin view)
+     * Get all listings (admin view) with host information
      * GET /api/admin/listings
      */
     @GetMapping("/listings")
@@ -98,7 +103,50 @@ public class AdminController {
             }
             
             List<Listing> listings = listingService.getAllListings();
-            return ResponseEntity.ok(listings);
+            
+            // Enhance listings with host information
+            List<Map<String, Object>> enrichedListings = new ArrayList<>();
+            for (Listing listing : listings) {
+                Map<String, Object> enrichedListing = new HashMap<>();
+                enrichedListing.put("id", listing.getId());
+                enrichedListing.put("userId", listing.getUserId());
+                enrichedListing.put("title", listing.getTitle());
+                enrichedListing.put("description", listing.getDescription());
+                enrichedListing.put("city", listing.getCity());
+                enrichedListing.put("address", listing.getAddress());
+                enrichedListing.put("pricePerNight", listing.getPricePerNight());
+                enrichedListing.put("maxGuests", listing.getMaxGuests());
+                enrichedListing.put("status", listing.getStatus());
+                enrichedListing.put("imageUrls", listing.getImageUrls());
+                enrichedListing.put("createdAt", listing.getCreatedAt());
+                
+                // Fetch host information
+                try {
+                    User host = userService.getUserById(listing.getUserId());
+                    System.out.println("Fetched host for listing " + listing.getId() + ": " + 
+                        (host != null ? host.getName() + " (" + host.getEmail() + ")" : "null"));
+                    if (host != null) {
+                        Map<String, String> hostInfo = new HashMap<>();
+                        hostInfo.put("name", host.getName());
+                        hostInfo.put("email", host.getEmail());
+                        hostInfo.put("role", host.getRole());
+                        enrichedListing.put("host", hostInfo);
+                        System.out.println("Added host info: " + hostInfo);
+                    } else {
+                        System.out.println("Host is null for userId: " + listing.getUserId());
+                        enrichedListing.put("host", null);
+                    }
+                } catch (Exception e) {
+                    // If host not found, continue without host info
+                    System.err.println("Error fetching host for listing " + listing.getId() + ": " + e.getMessage());
+                    e.printStackTrace();
+                    enrichedListing.put("host", null);
+                }
+                
+                enrichedListings.add(enrichedListing);
+            }
+            
+            return ResponseEntity.ok(enrichedListings);
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -352,6 +400,137 @@ public class AdminController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createError("Failed to reject listing: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get all users
+     * GET /api/admin/users
+     */
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers(
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            List<User> users = userService.getAllUsers();
+            return ResponseEntity.ok(users);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to fetch users: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get user details with their reservations and listings
+     * GET /api/admin/users/{id}
+     */
+    @GetMapping("/users/{id}")
+    public ResponseEntity<?> getUserDetails(
+            @PathVariable int id,
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            User user = userService.getUserById(id);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createError("User not found"));
+            }
+            
+            Map<String, Object> userDetails = new HashMap<>();
+            userDetails.put("user", user);
+            
+            // Get user's reservations
+            List<Reservation> allReservations = reservationService.getAllReservations();
+            List<Map<String, Object>> userReservations = new ArrayList<>();
+            
+            for (Reservation reservation : allReservations) {
+                if (reservation.getUserId() == id) {
+                    Map<String, Object> enrichedReservation = new HashMap<>();
+                    enrichedReservation.put("id", reservation.getId());
+                    enrichedReservation.put("listingId", reservation.getListingId());
+                    enrichedReservation.put("checkIn", reservation.getCheckIn() != null ? reservation.getCheckIn().toString() : "");
+                    enrichedReservation.put("checkOut", reservation.getCheckOut() != null ? reservation.getCheckOut().toString() : "");
+                    enrichedReservation.put("totalPrice", reservation.getTotalPrice());
+                    enrichedReservation.put("status", reservation.getStatus());
+                    enrichedReservation.put("createdAt", reservation.getCreatedAt());
+                    
+                    // Get listing info
+                    try {
+                        Listing listing = listingService.getListingById(reservation.getListingId());
+                        if (listing != null) {
+                            enrichedReservation.put("listingTitle", listing.getTitle());
+                            enrichedReservation.put("listingCity", listing.getCity());
+                        }
+                    } catch (Exception e) {
+                        // Continue without listing info
+                    }
+                    
+                    userReservations.add(enrichedReservation);
+                }
+            }
+            userDetails.put("reservations", userReservations);
+            
+            // If user is a host, get their listings
+            if ("host".equalsIgnoreCase(user.getRole())) {
+                List<Listing> allListings = listingService.getAllListings();
+                List<Listing> hostListings = new ArrayList<>();
+                for (Listing listing : allListings) {
+                    if (listing.getUserId() == id) {
+                        hostListings.add(listing);
+                    }
+                }
+                userDetails.put("listings", hostListings);
+            }
+            
+            return ResponseEntity.ok(userDetails);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to fetch user details: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Ban a user (deletes all their reservations and listings)
+     * PUT /api/admin/users/{id}/ban
+     */
+    @PutMapping("/users/{id}/ban")
+    public ResponseEntity<?> banUser(
+            @PathVariable int id,
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            boolean banned = userService.banUser(id);
+            
+            if (banned) {
+                return ResponseEntity.ok(createSuccess("User banned successfully. All their listings and reservations have been removed."));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createError("User not found"));
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to ban user: " + e.getMessage()));
         }
     }
     

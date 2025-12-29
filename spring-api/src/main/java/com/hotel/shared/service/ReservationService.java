@@ -13,4 +13,6 @@ public interface ReservationService extends Remote {
     Reservation createReservation(Reservation reservation) throws RemoteException;
     boolean updateReservationStatus(int reservationId, String newStatus, int currentUserId) throws RemoteException, Exception;
     boolean cancelReservation(int reservationId, int currentUserId) throws RemoteException, Exception;
+    boolean cancelGuestReservation(int reservationId, int guestUserId) throws RemoteException, Exception;
+    boolean deleteReservation(int reservationId) throws RemoteException;
 }

@@ -17,6 +17,11 @@ interface Listing {
   hostId: number;
   status?: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  host?: {
+    name: string;
+    email: string;
+    role: string;
+  };
 }
 
 const AdminListingApprovalsPage: React.FC = () => {
@@ -236,7 +241,12 @@ const AdminListingApprovalsPage: React.FC = () => {
                         />
                         <div>
                           <div className="text-sm font-medium text-gray-900">{listing.title}</div>
-                          <div className="text-xs text-gray-500">ID: {listing.id} | Host: {listing.hostId}</div>
+                          <div className="text-xs text-gray-500">
+                            ID: {listing.id} | Host: {listing.host?.name || `ID ${listing.hostId}`}
+                            {listing.host?.email && (
+                              <span className="text-gray-400"> ({listing.host.email})</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>

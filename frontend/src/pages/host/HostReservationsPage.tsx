@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Calendar, User, Home, DollarSign, Clock } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface Reservation {
   id: number;
@@ -16,18 +17,18 @@ interface Reservation {
 }
 
 const HostReservationsPage: React.FC = () => {
+  const { user } = useAuth();
+  const location = useLocation();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>('all');
-  const navigate = useNavigate();
-
-  // TODO: Replace with actual user ID from auth context
-  const currentUserId = 1;
 
   useEffect(() => {
-    fetchReservations();
-  }, []);
+    if (user) {
+      fetchReservations();
+    }
+  }, [user]);
 
   const fetchReservations = async () => {
     if (!user) return;
@@ -124,8 +125,38 @@ const HostReservationsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">My Reservations</h1>
-          <p className="text-gray-600 mt-1">Manage bookings for your properties</p>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Host Dashboard</h1>
+            <p className="text-gray-600 mt-1">Manage your properties and reservations</p>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="mt-6 border-b border-gray-200">
+            <nav className="flex space-x-8">
+              <Link
+                to="/host/listings"
+                className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                  location.pathname === '/host/listings'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Home className="w-4 h-4" />
+                <span>My Listings</span>
+              </Link>
+              <Link
+                to="/host/reservations"
+                className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                  location.pathname === '/host/reservations'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Reservations</span>
+              </Link>
+            </nav>
+          </div>
         </div>
 
         {/* Stats Cards */}

@@ -73,4 +73,23 @@ public interface ReservationService extends Remote {
      * @throws NotFoundException If reservation doesn't exist
      */
     boolean cancelReservation(int reservationId, int currentUserId) throws RemoteException, AuthorizationException, NotFoundException;
+    
+    /**
+     * Cancel a reservation by the guest who made it
+     * @param reservationId The ID of the reservation to cancel
+     * @param guestUserId The ID of the guest who made the reservation
+     * @return true if cancelled successfully
+     * @throws RemoteException If RMI communication fails
+     * @throws AuthorizationException If user doesn't own the reservation
+     * @throws NotFoundException If reservation doesn't exist
+     */
+    boolean cancelGuestReservation(int reservationId, int guestUserId) throws RemoteException, AuthorizationException, NotFoundException;
+    
+    /**
+     * Delete a reservation (admin only)
+     * @param reservationId The ID of the reservation to delete
+     * @return true if deleted successfully
+     * @throws RemoteException If RMI communication fails
+     */
+    boolean deleteReservation(int reservationId) throws RemoteException;
 }

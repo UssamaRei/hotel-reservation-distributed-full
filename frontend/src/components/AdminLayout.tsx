@@ -22,7 +22,7 @@ const AdminLayout: React.FC = () => {
     { path: '/admin/hotels', icon: Hotel, label: 'Hotels' },
     { path: '/admin/bookings', icon: Calendar, label: 'Bookings' },
     { path: '/admin/approvals', icon: ClipboardCheck, label: 'Listing Approvals' },
-    { path: '/admin/customers', icon: Users, label: 'Customers' },
+    { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 

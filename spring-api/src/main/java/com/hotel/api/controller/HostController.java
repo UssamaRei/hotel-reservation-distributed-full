@@ -290,10 +290,10 @@ public class HostController {
     
     /**
      * Update reservation status (confirm or cancel)
-     * PATCH /api/host/reservations/{id}/status
+     * PUT /api/host/reservations/{id}/status
      * Required: role = HOST, ownership of listing verified
      */
-    @PatchMapping("/reservations/{id}/status")
+    @PutMapping("/reservations/{id}/status")
     public ResponseEntity<?> updateReservationStatus(
             @PathVariable int id,
             @RequestBody Map<String, String> payload,

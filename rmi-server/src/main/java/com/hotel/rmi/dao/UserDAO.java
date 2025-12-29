@@ -143,4 +143,50 @@ public class UserDAO {
             return false;
         }
     }
+    
+    /**
+     * Get all users (admin only)
+     */
+    public java.util.List<User> findAll() throws SQLException {
+        String sql = "SELECT id, name, email, role, created_at FROM users";
+        java.util.List<User> users = new java.util.ArrayList<>();
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setName(rs.getString("name"));
+                user.setEmail(rs.getString("email"));
+                user.setRole(rs.getString("role"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                users.add(user);
+            }
+        }
+        
+        return users;
+    }
+    
+    /**
+     * Ban a user by setting banned flag or deleting
+     */
+    public boolean ban(int userId) throws SQLException {
+        String sql = "UPDATE users SET role = 'banned' WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, userId);
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows > 0) {
+                logger.info("Banned user: " + userId);
+                return true;
+            }
+            return false;
+        }
+    }
 }
+

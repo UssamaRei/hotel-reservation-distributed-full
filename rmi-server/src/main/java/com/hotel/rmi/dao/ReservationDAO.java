@@ -217,6 +217,23 @@ public class ReservationDAO {
     }
     
     /**
+     * Delete all reservations for a user (for banning)
+     */
+    public boolean deleteByUserId(int userId) throws SQLException {
+        String sql = "DELETE FROM reservations WHERE user_id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, userId);
+            int affectedRows = stmt.executeUpdate();
+            
+            logger.info("Deleted " + affectedRows + " reservations for user: " + userId);
+            return true;
+        }
+    }
+    
+    /**
      * Map ResultSet to Reservation object
      */
     private Reservation mapResultSetToReservation(ResultSet rs) throws SQLException {

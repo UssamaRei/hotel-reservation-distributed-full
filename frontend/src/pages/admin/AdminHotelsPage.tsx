@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, MapPin, DollarSign, Users, Image as ImageIcon } from 'lucide-react';
+import { Trash2, MapPin, DollarSign, Users, Image as ImageIcon, Mail, UserCircle } from 'lucide-react';
 
 interface Listing {
   id: number;
@@ -11,6 +11,11 @@ interface Listing {
   maxGuests: number;
   userId: number;
   imageUrls: string[];
+  host?: {
+    name: string;
+    email: string;
+    role: string;
+  };
 }
 
 const AdminHotelsPage: React.FC = () => {
@@ -39,6 +44,8 @@ const AdminHotelsPage: React.FC = () => {
       }
 
       const data = await response.json();
+      console.log('Fetched listings:', data); // Debug log
+      console.log('First listing:', data[0]); // Debug log
       setListings(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -146,12 +153,37 @@ const AdminHotelsPage: React.FC = () => {
                   {listing.description}
                 </p>
 
+                {/* Host Information */}
+                {listing.host && (
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                    <div className="flex items-start space-x-2">
+                      <UserCircle className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          Host: {listing.host.name || 'N/A'}
+                        </p>
+                        <p className="text-xs text-gray-600 flex items-center mt-1 truncate">
+                          <Mail className="w-3 h-3 mr-1 flex-shrink-0" />
+                          {listing.host.email || 'No email'}
+                        </p>
+                        <p className="text-xs text-red-600 mt-1">Debug: {JSON.stringify(listing.host)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!listing.host && (
+                  <div className="bg-yellow-50 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-yellow-800">Host information not available (host is null or undefined)</p>
+                    <p className="text-xs text-gray-600">Listing ID: {listing.id}, User ID: {listing.userId}</p>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-b">
                   <span className="flex items-center">
                     <Users className="w-4 h-4 mr-1" />
                     {listing.maxGuests} guests
                   </span>
-                  <span>Host ID: {listing.userId}</span>
+                  <span>ID: {listing.id}</span>
                 </div>
 
                 {/* Actions */}

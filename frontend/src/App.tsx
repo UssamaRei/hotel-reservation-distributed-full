@@ -17,11 +17,14 @@ import AdminBookingsPage from './pages/admin/AdminBookingsPage';
 import AdminBookingDetailsPage from './pages/admin/AdminBookingDetailsPage';
 import AdminListingApprovalsPage from './pages/admin/AdminListingApprovalsPage';
 import AdminListingDetailsPage from './pages/admin/AdminListingDetailsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminUserDetailsPage from './pages/admin/AdminUserDetailsPage';
 import HostListingsPage from './pages/host/HostListingsPage';
 import CreateListingPage from './pages/host/CreateListingPage';
 import ViewListingPage from './pages/host/ViewListingPage';
 import EditListingPage from './pages/host/EditListingPage';
 import HostReservationsPage from './pages/host/HostReservationsPage';
+import MyReservationsPage from './pages/MyReservationsPage';
 
 function App() {
   return (
@@ -42,6 +45,13 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/become-host" element={<BecomeHostPage />} />
+                  
+                  {/* Guest routes - Protected */}
+                  <Route path="/my-reservations" element={
+                    <ProtectedRoute>
+                      <MyReservationsPage />
+                    </ProtectedRoute>
+                  } />
                   
                   {/* Host routes - Protected */}
                   <Route path="/host/listings" element={
@@ -88,6 +98,8 @@ function App() {
           <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
           <Route path="approvals" element={<AdminListingApprovalsPage />} />
           <Route path="listings/:id" element={<AdminListingDetailsPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="users/:id" element={<AdminUserDetailsPage />} />
           <Route path="customers" element={<div className="text-center py-12 text-gray-500">Customers Management - Coming Soon</div>} />
           <Route path="settings" element={<div className="text-center py-12 text-gray-500">Settings - Coming Soon</div>} />
         </Route>

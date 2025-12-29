@@ -34,6 +34,11 @@ const Navbar = () => {
             <Link to="/hotels" className="text-gray-700 hover:text-blue-600 font-medium transition">
               Apartments
             </Link>
+            {isAuthenticated && (
+              <Link to="/my-reservations" className="text-gray-700 hover:text-blue-600 font-medium transition">
+                My Reservations
+              </Link>
+            )}
             {user?.role === 'host' && (
               <Link to="/host/listings" className="text-gray-700 hover:text-blue-600 font-medium transition">
                 Host Dashboard
@@ -96,6 +101,15 @@ const Navbar = () => {
             >
               Apartments
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/my-reservations"
+                className="block text-gray-700 hover:text-blue-600 font-medium"
+                onClick={toggleMenu}
+              >
+                My Reservations
+              </Link>
+            )}
             {user?.role === 'host' && (
               <Link
                 to="/host/listings"

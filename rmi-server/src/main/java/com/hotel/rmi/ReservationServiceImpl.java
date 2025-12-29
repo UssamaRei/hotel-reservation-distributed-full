@@ -182,4 +182,54 @@ public class ReservationServiceImpl extends UnicastRemoteObject implements Reser
             throw new RemoteException("Failed to cancel reservation: " + e.getMessage(), e);
         }
     }
+    
+    @Override
+    public boolean cancelGuestReservation(int reservationId, int guestUserId) 
+            throws RemoteException, AuthorizationException, NotFoundException {
+        try {
+            logger.info("Guest " + guestUserId + " cancelling their reservation " + reservationId);
+            
+            // Check if reservation exists
+            Reservation reservation = reservationDAO.findById(reservationId);
+            if (reservation == null) {
+                throw new NotFoundException("Reservation not found with ID: " + reservationId);
+            }
+            
+            // Check if the guest owns this reservation
+            if (reservation.getUserId() != guestUserId) {
+                logger.warning("User " + guestUserId + " attempted to cancel reservation " + reservationId + " they don't own");
+                throw new AuthorizationException("You can only cancel your own reservations");
+            }
+            
+            // Update status to cancelled instead of deleting
+            boolean updated = reservationDAO.updateStatus(reservationId, "cancelled");
+            if (!updated) {
+                throw new RemoteException("Failed to cancel reservation");
+            }
+            
+            return updated;
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error cancelling guest reservation", e);
+            throw new RemoteException("Failed to cancel reservation: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public boolean deleteReservation(int reservationId) throws RemoteException {
+        try {
+            logger.info("Deleting reservation: " + reservationId);
+            
+            boolean deleted = reservationDAO.delete(reservationId);
+            if (!deleted) {
+                throw new RemoteException("Failed to delete reservation");
+            }
+            
+            return deleted;
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error deleting reservation", e);
+            throw new RemoteException("Failed to delete reservation: " + e.getMessage(), e);
+        }
+    }
 }
