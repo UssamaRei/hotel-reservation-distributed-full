@@ -16,6 +16,8 @@ public class Reservation implements Serializable {
     private BigDecimal totalPrice;
     private String status;
     private Timestamp createdAt;
+    private String guestPhone;
+    private String guestNotes;
     private String listingTitle;
     private String guestName;
     private String guestEmail;
@@ -54,4 +56,10 @@ public class Reservation implements Serializable {
     
     public String getGuestEmail() { return guestEmail; }
     public void setGuestEmail(String guestEmail) { this.guestEmail = guestEmail; }
+    
+    public String getGuestPhone() { return guestPhone; }
+    public void setGuestPhone(String guestPhone) { this.guestPhone = guestPhone; }
+    
+    public String getGuestNotes() { return guestNotes; }
+    public void setGuestNotes(String guestNotes) { this.guestNotes = guestNotes; }
 }

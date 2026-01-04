@@ -8,8 +8,8 @@ const BecomeHostPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBecomeHost = () => {
-    becomeHost();
-    navigate('/host/listings');
+    // Navigate to application form instead of directly becoming a host
+    navigate('/become-host/application');
   };
 
   if (!isAuthenticated) {
@@ -100,7 +100,7 @@ const BecomeHostPage: React.FC = () => {
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Get Started?</h2>
             <p className="text-gray-600 mb-6">
-              Upgrade your account to host and start listing your properties today
+              Submit your application to become a host and start listing your properties
             </p>
             <div className="flex items-center justify-center space-x-4">
               <button
@@ -113,7 +113,7 @@ const BecomeHostPage: React.FC = () => {
                 onClick={handleBecomeHost}
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-lg"
               >
-                Become a Host
+                Apply Now
               </button>
             </div>
           </div>
@@ -124,19 +124,19 @@ const BecomeHostPage: React.FC = () => {
             <ul className="space-y-2 text-gray-600">
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span>Your account will be upgraded to host status</span>
+                <span>Fill out the host application form with your details</span>
               </li>
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span>You'll get access to the Host Dashboard</span>
+                <span>Our admin team will review your application</span>
               </li>
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span>You can create and manage your apartment listings</span>
+                <span>Once approved, you'll get access to the Host Dashboard</span>
               </li>
               <li className="flex items-start">
                 <span className="text-blue-600 mr-2">✓</span>
-                <span>Start accepting reservations immediately</span>
+                <span>Start creating and managing your apartment listings</span>
               </li>
             </ul>
           </div>

@@ -37,6 +37,9 @@ public class ReservationController {
             @RequestBody Reservation reservation,
             @RequestHeader(value = "X-User-Id", required = true) String userId) {
         try {
+            // Debug logging
+            System.out.println("Received reservation - Phone: " + reservation.getGuestPhone() + ", Notes: " + reservation.getGuestNotes());
+            
             // Set the user ID from header
             reservation.setUserId(Integer.parseInt(userId));
             

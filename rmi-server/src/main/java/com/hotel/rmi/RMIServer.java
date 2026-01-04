@@ -34,6 +34,12 @@ public class RMIServer {
         Naming.rebind(userUrl, userService);
         System.out.println("UserService bound at " + userUrl);
         
+        // Register Host Application Service
+        HostApplicationServiceImpl hostApplicationService = new HostApplicationServiceImpl();
+        String hostAppUrl = String.format("rmi://%s:1099/HostApplicationService", host);
+        Naming.rebind(hostAppUrl, hostApplicationService);
+        System.out.println("HostApplicationService bound at " + hostAppUrl);
+        
         System.out.println("\nRMI Server started successfully!");
     }
 }

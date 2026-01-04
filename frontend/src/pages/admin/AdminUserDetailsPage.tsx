@@ -96,6 +96,33 @@ const AdminUserDetailsPage: React.FC = () => {
     }
   };
 
+  const unbanUser = async () => {
+    if (!confirm(`Are you sure you want to unban ${userDetails?.user.name}? They will be restored as a guest.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/admin/users/${id}/role`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': localStorage.getItem('userId') || '1',
+          'X-User-Role': 'admin',
+        },
+        body: JSON.stringify({ role: 'guest' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to unban user');
+      }
+
+      alert('User unbanned successfully and restored as guest');
+      fetchUserDetails();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to unban user');
+    }
+  };
+
   const deleteReservation = async (reservationId: number) => {
     if (!confirm('Are you sure you want to delete this reservation?')) {
       return;
@@ -240,15 +267,25 @@ const AdminUserDetailsPage: React.FC = () => {
               </div>
             </div>
 
-            {user.role.toLowerCase() !== 'banned' && user.role.toLowerCase() !== 'admin' && (
-              <button
-                onClick={banUser}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              >
-                <Ban className="w-4 h-4" />
-                Ban User
-              </button>
-            )}
+            <div className="flex gap-2">
+              {user.role.toLowerCase() === 'banned' ? (
+                <button
+                  onClick={unbanUser}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Unban User
+                </button>
+              ) : user.role.toLowerCase() !== 'admin' && (
+                <button
+                  onClick={banUser}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                >
+                  <Ban className="w-4 h-4" />
+                  Ban User
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

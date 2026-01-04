@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ListingDAO {
@@ -15,8 +16,8 @@ public class ListingDAO {
      * Create a new listing
      */
     public Listing create(Listing listing) throws SQLException {
-        String sql = "INSERT INTO listings (user_id, title, description, address, city, price_per_night, max_guests, status) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO listings (user_id, title, description, address, city, price_per_night, max_guests, beds, bathrooms, status) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -28,7 +29,9 @@ public class ListingDAO {
             stmt.setString(5, listing.getCity());
             stmt.setBigDecimal(6, listing.getPricePerNight());
             stmt.setInt(7, listing.getMaxGuests());
-            stmt.setString(8, listing.getStatus() != null ? listing.getStatus() : "pending");
+            stmt.setInt(8, listing.getBeds());
+            stmt.setInt(9, listing.getBathrooms());
+            stmt.setString(10, listing.getStatus() != null ? listing.getStatus() : "pending");
             
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
@@ -53,7 +56,7 @@ public class ListingDAO {
      */
     public boolean update(Listing listing, int currentUserId) throws SQLException {
         String sql = "UPDATE listings SET title = ?, description = ?, address = ?, city = ?, " +
-                     "price_per_night = ?, max_guests = ?, status = ? WHERE id = ? AND user_id = ?";
+                     "price_per_night = ?, max_guests = ?, beds = ?, bathrooms = ? WHERE id = ? AND user_id = ?";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -64,9 +67,12 @@ public class ListingDAO {
             stmt.setString(4, listing.getCity());
             stmt.setBigDecimal(5, listing.getPricePerNight());
             stmt.setInt(6, listing.getMaxGuests());
-            stmt.setString(7, listing.getStatus());
-            stmt.setInt(8, listing.getId());
-            stmt.setInt(9, currentUserId);
+            stmt.setInt(7, listing.getBeds());
+            stmt.setInt(8, listing.getBathrooms());
+            stmt.setInt(9, listing.getId());
+            stmt.setInt(10, currentUserId);
+            
+            logger.info("Updating listing with beds=" + listing.getBeds() + ", bathrooms=" + listing.getBathrooms());
             
             int affectedRows = stmt.executeUpdate();
             
@@ -104,21 +110,80 @@ public class ListingDAO {
      * Delete a listing (with ownership check)
      */
     public boolean delete(int listingId, int currentUserId) throws SQLException {
-        String sql = "DELETE FROM listings WHERE id = ? AND user_id = ?";
-        
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Start transaction
             
-            stmt.setInt(1, listingId);
-            stmt.setInt(2, currentUserId);
+            // First check if there are active reservations (pending or confirmed)
+            String checkSql = "SELECT COUNT(*) FROM reservations WHERE listing_id = ? AND status IN ('pending', 'confirmed')";
             
-            int affectedRows = stmt.executeUpdate();
-            
-            if (affectedRows > 0) {
-                logger.info("Deleted listing: " + listingId);
-                return true;
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, listingId);
+                
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        conn.rollback();
+                        // Throw exception with specific message about active reservations
+                        throw new SQLException("Cannot delete listing: There are active reservations (pending or confirmed) for this property. Please cancel or complete them first.");
+                    }
+                }
             }
-            return false; // Either doesn't exist or user doesn't own it
+            
+            // Delete all cancelled reservations for this listing
+            String deleteCancelledSql = "DELETE FROM reservations WHERE listing_id = ? AND status = 'cancelled'";
+            try (PreparedStatement deleteReservationsStmt = conn.prepareStatement(deleteCancelledSql)) {
+                deleteReservationsStmt.setInt(1, listingId);
+                int deletedReservations = deleteReservationsStmt.executeUpdate();
+                if (deletedReservations > 0) {
+                    logger.info("Deleted " + deletedReservations + " cancelled reservations for listing: " + listingId);
+                }
+            }
+            
+            // Delete all images for this listing
+            String deleteImagesSql = "DELETE FROM listing_images WHERE listing_id = ?";
+            try (PreparedStatement deleteImagesStmt = conn.prepareStatement(deleteImagesSql)) {
+                deleteImagesStmt.setInt(1, listingId);
+                deleteImagesStmt.executeUpdate();
+            }
+            
+            // Now delete the listing (with ownership check)
+            String sql = "DELETE FROM listings WHERE id = ? AND user_id = ?";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, listingId);
+                stmt.setInt(2, currentUserId);
+                
+                int affectedRows = stmt.executeUpdate();
+                
+                if (affectedRows > 0) {
+                    conn.commit();
+                    logger.info("Deleted listing: " + listingId);
+                    return true;
+                } else {
+                    conn.rollback();
+                    return false; // Either doesn't exist or user doesn't own it
+                }
+            }
+            
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    logger.log(Level.SEVERE, "Error rolling back transaction", rollbackEx);
+                }
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException closeEx) {
+                    logger.log(Level.SEVERE, "Error closing connection", closeEx);
+                }
+            }
         }
     }
     
@@ -235,25 +300,57 @@ public class ListingDAO {
      * Delete all listings for a user (for banning)
      */
     public boolean deleteByUserId(int userId) throws SQLException {
-        // First delete all listing images
-        String deleteImagesSql = "DELETE FROM listing_images WHERE listing_id IN (SELECT id FROM listings WHERE user_id = ?)";
-        String deleteListingsSql = "DELETE FROM listings WHERE user_id = ?";
-        
-        try (Connection conn = DBConnection.getConnection()) {
-            // Delete images first (foreign key constraint)
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Start transaction
+            
+            // First delete all reservations (cancelled ones) for user's listings
+            String deleteReservationsSql = "DELETE FROM reservations WHERE listing_id IN (SELECT id FROM listings WHERE user_id = ?) AND status = 'cancelled'";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteReservationsSql)) {
+                stmt.setInt(1, userId);
+                int deletedReservations = stmt.executeUpdate();
+                if (deletedReservations > 0) {
+                    logger.info("Deleted " + deletedReservations + " cancelled reservations for user's listings: " + userId);
+                }
+            }
+            
+            // Delete all listing images
+            String deleteImagesSql = "DELETE FROM listing_images WHERE listing_id IN (SELECT id FROM listings WHERE user_id = ?)";
             try (PreparedStatement stmt = conn.prepareStatement(deleteImagesSql)) {
                 stmt.setInt(1, userId);
                 stmt.executeUpdate();
             }
             
             // Then delete listings
+            String deleteListingsSql = "DELETE FROM listings WHERE user_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteListingsSql)) {
                 stmt.setInt(1, userId);
                 int affectedRows = stmt.executeUpdate();
                 logger.info("Deleted " + affectedRows + " listings for user: " + userId);
             }
             
+            conn.commit();
             return true;
+            
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    logger.log(Level.SEVERE, "Error rolling back transaction", rollbackEx);
+                }
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException closeEx) {
+                    logger.log(Level.SEVERE, "Error closing connection", closeEx);
+                }
+            }
         }
     }
     
@@ -270,6 +367,26 @@ public class ListingDAO {
         listing.setCity(rs.getString("city"));
         listing.setPricePerNight(rs.getBigDecimal("price_per_night"));
         listing.setMaxGuests(rs.getInt("max_guests"));
+        
+        // Try to get beds and bathrooms (may not exist in older database versions)
+        try {
+            int bedsValue = rs.getInt("beds");
+            listing.setBeds(bedsValue);
+            logger.info("Read from DB - listing " + rs.getInt("id") + ": beds=" + bedsValue);
+        } catch (SQLException e) {
+            logger.warning("beds column not found, using default: " + e.getMessage());
+            listing.setBeds(1); // Default value
+        }
+        
+        try {
+            int bathroomsValue = rs.getInt("bathrooms");
+            listing.setBathrooms(bathroomsValue);
+            logger.info("Read from DB - listing " + rs.getInt("id") + ": bathrooms=" + bathroomsValue);
+        } catch (SQLException e) {
+            logger.warning("bathrooms column not found, using default: " + e.getMessage());
+            listing.setBathrooms(1); // Default value
+        }
+        
         listing.setStatus(rs.getString("status"));
         listing.setCreatedAt(rs.getTimestamp("created_at"));
         return listing;

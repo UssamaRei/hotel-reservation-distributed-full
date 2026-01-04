@@ -11,12 +11,15 @@ import HotelDetailsPage from './pages/HotelDetailsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import BecomeHostPage from './pages/BecomeHostPage';
+import BecomeHostApplicationPage from './pages/BecomeHostApplicationPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import AdminHotelsPage from './pages/admin/AdminHotelsPage';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage';
 import AdminBookingDetailsPage from './pages/admin/AdminBookingDetailsPage';
 import AdminListingApprovalsPage from './pages/admin/AdminListingApprovalsPage';
 import AdminListingDetailsPage from './pages/admin/AdminListingDetailsPage';
+import AdminHostApplicationsPage from './pages/admin/AdminHostApplicationsPage';
+import AdminHostApplicationDetailPage from './pages/admin/AdminHostApplicationDetailPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminUserDetailsPage from './pages/admin/AdminUserDetailsPage';
 import HostListingsPage from './pages/host/HostListingsPage';
@@ -24,7 +27,9 @@ import CreateListingPage from './pages/host/CreateListingPage';
 import ViewListingPage from './pages/host/ViewListingPage';
 import EditListingPage from './pages/host/EditListingPage';
 import HostReservationsPage from './pages/host/HostReservationsPage';
+import HostReservationDetailsPage from './pages/host/HostReservationDetailsPage';
 import MyReservationsPage from './pages/MyReservationsPage';
+import ReservationConfirmationPage from './pages/ReservationConfirmationPage';
 
 function App() {
   return (
@@ -45,8 +50,14 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/become-host" element={<BecomeHostPage />} />
+                  <Route path="/become-host/application" element={<BecomeHostApplicationPage />} />
                   
                   {/* Guest routes - Protected */}
+                  <Route path="/reservation-confirmation" element={
+                    <ProtectedRoute>
+                      <ReservationConfirmationPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/my-reservations" element={
                     <ProtectedRoute>
                       <MyReservationsPage />
@@ -79,6 +90,11 @@ function App() {
                       <HostReservationsPage />
                     </ProtectedRoute>
                   } />
+                  <Route path="/host/reservations/:id" element={
+                    <ProtectedRoute requireRole="host">
+                      <HostReservationDetailsPage />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </main>
               <Footer />
@@ -98,6 +114,8 @@ function App() {
           <Route path="bookings/:id" element={<AdminBookingDetailsPage />} />
           <Route path="approvals" element={<AdminListingApprovalsPage />} />
           <Route path="listings/:id" element={<AdminListingDetailsPage />} />
+          <Route path="host-applications" element={<AdminHostApplicationsPage />} />
+          <Route path="host-applications/:id" element={<AdminHostApplicationDetailPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:id" element={<AdminUserDetailsPage />} />
           <Route path="customers" element={<div className="text-center py-12 text-gray-500">Customers Management - Coming Soon</div>} />

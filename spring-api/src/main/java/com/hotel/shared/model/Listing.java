@@ -17,6 +17,8 @@ public class Listing implements Serializable {
     private String city;
     private BigDecimal pricePerNight;
     private int maxGuests;
+    private int beds;
+    private int bathrooms;
     private String status; // pending, approved, rejected
     private Timestamp createdAt;
     private List<String> imageUrls;
@@ -48,6 +50,12 @@ public class Listing implements Serializable {
     
     public int getMaxGuests() { return maxGuests; }
     public void setMaxGuests(int maxGuests) { this.maxGuests = maxGuests; }
+    
+    public int getBeds() { return beds; }
+    public void setBeds(int beds) { this.beds = beds; }
+    
+    public int getBathrooms() { return bathrooms; }
+    public void setBathrooms(int bathrooms) { this.bathrooms = bathrooms; }
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

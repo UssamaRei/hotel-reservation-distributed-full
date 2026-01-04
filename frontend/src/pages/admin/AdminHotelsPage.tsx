@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, MapPin, DollarSign, Users, Image as ImageIcon, Mail, UserCircle } from 'lucide-react';
+import { Trash2, MapPin, DollarSign, Users, Bed, Bath, Image as ImageIcon, Mail, UserCircle } from 'lucide-react';
 
 interface Listing {
   id: number;
@@ -9,6 +9,8 @@ interface Listing {
   address: string;
   pricePerNight: number;
   maxGuests: number;
+  beds: number;
+  bathrooms: number;
   userId: number;
   imageUrls: string[];
   host?: {
@@ -179,10 +181,20 @@ const AdminHotelsPage: React.FC = () => {
                 )}
 
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-b">
-                  <span className="flex items-center">
-                    <Users className="w-4 h-4 mr-1" />
-                    {listing.maxGuests} guests
-                  </span>
+                  <div className="flex items-center space-x-3">
+                    <span className="flex items-center">
+                      <Users className="w-4 h-4 mr-1" />
+                      {listing.maxGuests}
+                    </span>
+                    <span className="flex items-center">
+                      <Bed className="w-4 h-4 mr-1" />
+                      {listing.beds || 1}
+                    </span>
+                    <span className="flex items-center">
+                      <Bath className="w-4 h-4 mr-1" />
+                      {listing.bathrooms || 1}
+                    </span>
+                  </div>
                   <span>ID: {listing.id}</span>
                 </div>
 

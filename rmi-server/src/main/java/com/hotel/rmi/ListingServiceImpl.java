@@ -45,6 +45,7 @@ public class ListingServiceImpl extends UnicastRemoteObject implements ListingSe
             throws RemoteException, AuthorizationException, NotFoundException {
         try {
             logger.info("Updating listing: " + listing.getId() + " by user: " + currentUserId);
+            logger.info("Update values: beds=" + listing.getBeds() + ", bathrooms=" + listing.getBathrooms());
             
             // First check if listing exists
             Listing existing = listingDAO.findById(listing.getId());

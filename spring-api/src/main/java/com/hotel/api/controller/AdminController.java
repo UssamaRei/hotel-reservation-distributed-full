@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -116,8 +117,30 @@ public class AdminController {
                 enrichedListing.put("address", listing.getAddress());
                 enrichedListing.put("pricePerNight", listing.getPricePerNight());
                 enrichedListing.put("maxGuests", listing.getMaxGuests());
+                enrichedListing.put("beds", listing.getBeds());
+                enrichedListing.put("bathrooms", listing.getBathrooms());
                 enrichedListing.put("status", listing.getStatus());
-                enrichedListing.put("imageUrls", listing.getImageUrls());
+                
+                // Convert imageUrls to full URLs
+                List<String> fullImageUrls = new ArrayList<>();
+                if (listing.getImageUrls() != null && !listing.getImageUrls().isEmpty()) {
+                    for (String imageUrl : listing.getImageUrls()) {
+                        // If URL doesn't start with http, prepend server URL
+                        if (imageUrl != null && !imageUrl.startsWith("http")) {
+                            fullImageUrls.add("http://localhost:8080" + imageUrl);
+                        } else {
+                            fullImageUrls.add(imageUrl);
+                        }
+                    }
+                }
+                enrichedListing.put("imageUrls", fullImageUrls);
+                
+                // Add first image as imageUrl for compatibility
+                if (!fullImageUrls.isEmpty()) {
+                    enrichedListing.put("imageUrl", fullImageUrls.get(0));
+                } else {
+                    enrichedListing.put("imageUrl", null);
+                }
                 enrichedListing.put("createdAt", listing.getCreatedAt());
                 
                 // Fetch host information
@@ -531,6 +554,125 @@ public class AdminController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createError("Failed to ban user: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Create a new user (admin only)
+     * POST /api/admin/users
+     */
+    @PostMapping("/users")
+    public ResponseEntity<?> createUser(
+            @RequestBody Map<String, String> userData,
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            String name = userData.get("name");
+            String email = userData.get("email");
+            String password = userData.get("password");
+            String userRole = userData.get("role");
+            
+            if (name == null || name.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(createError("Name is required"));
+            }
+            
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(createError("Email is required"));
+            }
+            
+            if (password == null || password.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(createError("Password is required"));
+            }
+            
+            if (userRole == null || userRole.trim().isEmpty()) {
+                userRole = "guest";
+            }
+            
+            // Create user (register method checks for duplicate email)
+            User newUser = new User();
+            newUser.setName(name.trim());
+            newUser.setEmail(email.trim());
+            newUser.setPassword(password); // In production, hash this!
+            newUser.setRole(userRole);
+            
+            User createdUser = userService.register(newUser);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "User created successfully");
+            response.put("user", createdUser);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            
+        } catch (RemoteException e) {
+            // Handle duplicate email or other errors
+            if (e.getMessage().contains("already exists")) {
+                return ResponseEntity.badRequest()
+                        .body(createError("Email already exists"));
+            }
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to create user: " + e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to create user: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Update user role
+     * PATCH /api/admin/users/{id}/role
+     */
+    @PatchMapping("/users/{id}/role")
+    public ResponseEntity<?> updateUserRole(
+            @PathVariable int id,
+            @RequestBody Map<String, String> data,
+            @RequestHeader(value = "X-User-Id", required = true) int userId,
+            @RequestHeader(value = "X-User-Role", required = true) String role) {
+        try {
+            if (!"admin".equalsIgnoreCase(role)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createError("Admin access required"));
+            }
+            
+            String newRole = data.get("role");
+            
+            if (newRole == null || newRole.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(createError("Role is required"));
+            }
+            
+            // Validate role
+            if (!newRole.equalsIgnoreCase("guest") && 
+                !newRole.equalsIgnoreCase("host") && 
+                !newRole.equalsIgnoreCase("admin") &&
+                !newRole.equalsIgnoreCase("banned")) {
+                return ResponseEntity.badRequest()
+                        .body(createError("Invalid role. Must be: guest, host, admin, or banned"));
+            }
+            
+            User updated = userService.updateUserRole(id, newRole);
+            
+            if (updated != null) {
+                return ResponseEntity.ok(createSuccess("User role updated successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createError("User not found"));
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to update user role: " + e.getMessage()));
         }
     }
     

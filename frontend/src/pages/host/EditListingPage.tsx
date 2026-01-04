@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Save, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface FormData {
   title: string;
@@ -9,11 +10,14 @@ interface FormData {
   city: string;
   pricePerNight: string;
   maxGuests: string;
+  beds: string;
+  bathrooms: string;
 }
 
 const EditListingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -24,6 +28,8 @@ const EditListingPage: React.FC = () => {
     city: '',
     pricePerNight: '',
     maxGuests: '1',
+    beds: '1',
+    bathrooms: '1',
   });
 
   const currentUserId = 1;
@@ -49,6 +55,8 @@ const EditListingPage: React.FC = () => {
         city: data.city,
         pricePerNight: data.pricePerNight.toString(),
         maxGuests: data.maxGuests.toString(),
+        beds: data.beds?.toString() || '1',
+        bathrooms: data.bathrooms?.toString() || '1',
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -71,6 +79,21 @@ const EditListingPage: React.FC = () => {
     try {
       if (!user) return;
       
+      const requestBody = {
+        title: formData.title,
+        description: formData.description,
+        address: formData.address,
+        city: formData.city,
+        pricePerNight: parseFloat(formData.pricePerNight),
+        maxGuests: parseInt(formData.maxGuests),
+        beds: parseInt(formData.beds),
+        bathrooms: parseInt(formData.bathrooms),
+      };
+      
+      console.log('Updating listing with data:', requestBody);
+      console.log('beds:', requestBody.beds, 'type:', typeof requestBody.beds);
+      console.log('bathrooms:', requestBody.bathrooms, 'type:', typeof requestBody.bathrooms);
+      
       const response = await fetch(`http://localhost:8080/api/host/listings/${id}`, {
         method: 'PUT',
         headers: {
@@ -78,11 +101,7 @@ const EditListingPage: React.FC = () => {
           'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
-        body: JSON.stringify({
-          ...formData,
-          pricePerNight: parseFloat(formData.pricePerNight),
-          maxGuests: parseInt(formData.maxGuests),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -249,6 +268,42 @@ const EditListingPage: React.FC = () => {
                     <option key={i + 1} value={i + 1}>
                       {i + 1} {i === 0 ? 'Guest' : 'Guests'}
                     </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="beds" className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Beds *
+                </label>
+                <select
+                  id="beds"
+                  name="beds"
+                  required
+                  value={formData.beds}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                    <option key={num} value={num}>{num} {num === 1 ? 'bed' : 'beds'}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Bathrooms *
+                </label>
+                <select
+                  id="bathrooms"
+                  name="bathrooms"
+                  required
+                  value={formData.bathrooms}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <option key={num} value={num}>{num} {num === 1 ? 'bathroom' : 'bathrooms'}</option>
                   ))}
                 </select>
               </div>

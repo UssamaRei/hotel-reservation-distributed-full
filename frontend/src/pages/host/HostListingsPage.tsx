@@ -77,7 +77,8 @@ const HostListingsPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete listing');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete listing');
       }
 
       // Remove from local state

@@ -1,6 +1,7 @@
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\dao\ListingDAO.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\ListingServiceImpl.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\ReservationServiceImpl.java
+C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\dao\HostApplicationDAO.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\dao\UserDAO.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\exception\NotFoundException.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\exception\AuthorizationException.java
@@ -9,8 +10,10 @@ C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\database\DBConnection.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\model\Reservation.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\model\User.java
+C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\HostApplicationServiceImpl.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\dao\RoomDAO.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\dao\ReservationDAO.java
+C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\model\HostApplication.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\service\UserService.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\service\ReservationService.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\RoomServiceImpl.java
@@ -18,3 +21,4 @@ C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\service\ListingService.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\rmi\UserServiceImpl.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\service\RoomService.java
+C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\rmi-server\src\main\java\com\hotel\shared\service\HostApplicationService.java

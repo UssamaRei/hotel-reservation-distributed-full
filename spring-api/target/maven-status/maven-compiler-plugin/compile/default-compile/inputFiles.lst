@@ -1,5 +1,6 @@
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\service\ListingService.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\api\controller\FileUploadController.java
+C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\model\HostApplication.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\service\ReservationService.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\api\HotelApiApplication.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\model\Reservation.java
@@ -14,6 +15,8 @@ C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\api\controller\AdminController.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\service\UserService.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\model\User.java
+C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\service\HostApplicationService.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\shared\model\Listing.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\api\config\CorsConfig.java
+C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\api\controller\HostApplicationController.java
 C:\Users\pc\Desktop\New folder\hotel-reservation-distributed-full\spring-api\src\main\java\com\hotel\api\controller\ReservationController.java

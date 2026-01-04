@@ -15,18 +15,20 @@ public class ReservationDAO {
      * Create a new reservation
      */
     public Reservation create(Reservation reservation) throws SQLException {
-        String sql = "INSERT INTO reservations (listing_id, user_id, check_in, check_out, total_price, status) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO reservations (listing_id, user_id, guest_phone, check_in, check_out, total_price, status, guest_notes) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
             stmt.setInt(1, reservation.getListingId());
             stmt.setInt(2, reservation.getUserId());
-            stmt.setDate(3, reservation.getCheckIn());
-            stmt.setDate(4, reservation.getCheckOut());
-            stmt.setBigDecimal(5, reservation.getTotalPrice());
-            stmt.setString(6, reservation.getStatus() != null ? reservation.getStatus() : "pending");
+            stmt.setString(3, reservation.getGuestPhone());
+            stmt.setDate(4, reservation.getCheckIn());
+            stmt.setDate(5, reservation.getCheckOut());
+            stmt.setBigDecimal(6, reservation.getTotalPrice());
+            stmt.setString(7, reservation.getStatus() != null ? reservation.getStatus() : "pending");
+            stmt.setString(8, reservation.getGuestNotes());
             
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
@@ -50,7 +52,9 @@ public class ReservationDAO {
      * Find reservation by ID
      */
     public Reservation findById(int reservationId) throws SQLException {
-        String sql = "SELECT r.*, l.title as listing_title, u.name as guest_name, u.email as guest_email " +
+        String sql = "SELECT r.id, r.listing_id, r.user_id, r.guest_phone, r.check_in, r.check_out, " +
+                     "r.total_price, r.status, r.guest_notes, r.created_at, " +
+                     "l.title as listing_title, u.name as guest_name, u.email as guest_email " +
                      "FROM reservations r " +
                      "JOIN listings l ON r.listing_id = l.id " +
                      "JOIN users u ON r.user_id = u.id " +
@@ -74,7 +78,9 @@ public class ReservationDAO {
      * Find all reservations for a specific listing
      */
     public List<Reservation> findByListingId(int listingId) throws SQLException {
-        String sql = "SELECT r.*, l.title as listing_title, u.name as guest_name, u.email as guest_email " +
+        String sql = "SELECT r.id, r.listing_id, r.user_id, r.guest_phone, r.check_in, r.check_out, " +
+                     "r.total_price, r.status, r.guest_notes, r.created_at, " +
+                     "l.title as listing_title, u.name as guest_name, u.email as guest_email " +
                      "FROM reservations r " +
                      "JOIN listings l ON r.listing_id = l.id " +
                      "JOIN users u ON r.user_id = u.id " +
@@ -102,7 +108,9 @@ public class ReservationDAO {
      * Find all reservations for listings owned by a host
      */
     public List<Reservation> findByHostId(int hostId) throws SQLException {
-        String sql = "SELECT r.*, l.title as listing_title, u.name as guest_name, u.email as guest_email " +
+        String sql = "SELECT r.id, r.listing_id, r.user_id, r.guest_phone, r.check_in, r.check_out, " +
+                     "r.total_price, r.status, r.guest_notes, r.created_at, " +
+                     "l.title as listing_title, u.name as guest_name, u.email as guest_email " +
                      "FROM reservations r " +
                      "JOIN listings l ON r.listing_id = l.id " +
                      "JOIN users u ON r.user_id = u.id " +
@@ -153,7 +161,9 @@ public class ReservationDAO {
      * Find all reservations (admin)
      */
     public List<Reservation> findAll() throws SQLException {
-        String sql = "SELECT r.*, l.title as listing_title, u.name as guest_name, u.email as guest_email " +
+        String sql = "SELECT r.id, r.listing_id, r.user_id, r.guest_phone, r.check_in, r.check_out, " +
+                     "r.total_price, r.status, r.guest_notes, r.created_at, " +
+                     "l.title as listing_title, u.name as guest_name, u.email as guest_email " +
                      "FROM reservations r " +
                      "JOIN listings l ON r.listing_id = l.id " +
                      "JOIN users u ON r.user_id = u.id " +
@@ -246,6 +256,19 @@ public class ReservationDAO {
         reservation.setTotalPrice(rs.getBigDecimal("total_price"));
         reservation.setStatus(rs.getString("status"));
         reservation.setCreatedAt(rs.getTimestamp("created_at"));
+        
+        // Try to get phone and notes if they exist
+        try {
+            reservation.setGuestPhone(rs.getString("guest_phone"));
+        } catch (SQLException e) {
+            // Field might not be present in all queries
+        }
+        
+        try {
+            reservation.setGuestNotes(rs.getString("guest_notes"));
+        } catch (SQLException e) {
+            // Field might not be present in all queries
+        }
         
         // Additional fields from joined tables
         try {

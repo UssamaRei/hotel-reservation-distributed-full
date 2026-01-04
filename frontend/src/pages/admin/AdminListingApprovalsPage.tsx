@@ -10,7 +10,7 @@ interface Listing {
   address: string;
   pricePerNight: number;
   maxGuests: number;
-  bedrooms: number;
+  beds: number;
   bathrooms: number;
   amenities: string;
   imageUrl: string;
@@ -264,11 +264,11 @@ const AdminListingApprovalsPage: React.FC = () => {
                         </div>
                         <div className="flex items-center">
                           <Bed className="w-4 h-4 mr-1" />
-                          {listing.bedrooms}
+                          {listing.beds || 1}
                         </div>
                         <div className="flex items-center">
                           <Bath className="w-4 h-4 mr-1" />
-                          {listing.bathrooms}
+                          {listing.bathrooms || 1}
                         </div>
                       </div>
                     </td>

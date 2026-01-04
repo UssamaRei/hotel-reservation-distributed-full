@@ -76,8 +76,15 @@ public class HostController {
                         .body(createError("Only hosts can update listings"));
             }
             
+            System.out.println("[HostController] Received update request for listing: " + id);
+            System.out.println("[HostController] beds=" + listing.getBeds() + ", bathrooms=" + listing.getBathrooms());
+            System.out.println("[HostController] maxGuests=" + listing.getMaxGuests());
+            
             listing.setId(id);
             Listing updated = listingService.updateListing(listing, userId);
+            
+            System.out.println("[HostController] After update from RMI - beds=" + updated.getBeds() + ", bathrooms=" + updated.getBathrooms());
+            
             return ResponseEntity.ok(updated);
             
         } catch (Exception e) {

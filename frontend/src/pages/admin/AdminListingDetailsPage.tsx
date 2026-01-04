@@ -10,10 +10,11 @@ interface Listing {
   address: string;
   pricePerNight: number;
   maxGuests: number;
-  bedrooms: number;
+  beds: number;
   bathrooms: number;
   amenities: string;
   imageUrl: string;
+  imageUrls: string[];
   hostId: number;
   status?: 'pending' | 'approved' | 'rejected';
   createdAt: string;
@@ -177,14 +178,32 @@ const AdminListingDetailsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Listing Details */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Main Image */}
+          {/* Images Gallery */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <img
-              src={listing.imageUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect fill="%23ddd" width="800" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="24"%3ENo Image Available%3C/text%3E%3C/svg%3E'}
-              alt={listing.title}
-              className="w-full h-96 object-cover"
-              onError={(e) => { e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect fill="%23ddd" width="800" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="24"%3ENo Image Available%3C/text%3E%3C/svg%3E'; }}
-            />
+            {listing.imageUrls && listing.imageUrls.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 p-4">
+                {listing.imageUrls.map((imageUrl, index) => (
+                  <img
+                    key={index}
+                    src={imageUrl}
+                    alt={`${listing.title} - Image ${index + 1}`}
+                    className="w-full h-96 object-cover rounded-lg"
+                    onError={(e) => { 
+                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect fill="%23ddd" width="800" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="24"%3EImage Not Available%3C/text%3E%3C/svg%3E'; 
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="w-full h-96 flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="mt-2 text-sm text-gray-500">No Images Available</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Description */}
@@ -204,12 +223,12 @@ const AdminListingDetailsPage: React.FC = () => {
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <Bed className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900">{listing.bedrooms}</p>
-                <p className="text-sm text-gray-600">Bedrooms</p>
+                <p className="text-2xl font-bold text-gray-900">{listing.beds || 1}</p>
+                <p className="text-sm text-gray-600">Beds</p>
               </div>
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <Bath className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900">{listing.bathrooms}</p>
+                <p className="text-2xl font-bold text-gray-900">{listing.bathrooms || 1}</p>
                 <p className="text-sm text-gray-600">Bathrooms</p>
               </div>
             </div>

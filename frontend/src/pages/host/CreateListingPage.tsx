@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, X, Upload } from 'lucide-react';
+import { Save, X, Upload, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+
+interface ImagePreview {
+  file?: File;
+  url: string;
+  type: 'file' | 'url';
+}
 
 const CreateListingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +20,10 @@ const CreateListingPage: React.FC = () => {
     city: '',
     pricePerNight: '',
     maxGuests: '1',
+    beds: '1',
+    bathrooms: '1',
   });
+  const [images, setImages] = useState<ImagePreview[]>([]);
   const [imageUrl, setImageUrl] = useState('');
   const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
 
@@ -25,12 +34,66 @@ const CreateListingPage: React.FC = () => {
     });
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`${file.name} is too large. Maximum size is 5MB.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImages(prev => [...prev, {
+          file,
+          url: reader.result as string,
+          type: 'file'
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleAddImageUrl = () => {
+    if (!imageUrl.trim()) return;
+    
+    setImages(prev => [...prev, {
+      url: imageUrl,
+      type: 'url'
+    }]);
+    setImageUrl('');
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setLoading(true);
 
     try {
+      const requestBody = {
+        title: formData.title,
+        description: formData.description,
+        address: formData.address,
+        city: formData.city,
+        pricePerNight: parseFloat(formData.pricePerNight),
+        maxGuests: parseInt(formData.maxGuests),
+        beds: parseInt(formData.beds),
+        bathrooms: parseInt(formData.bathrooms),
+      };
+      
+      console.log('Creating listing with data:', requestBody);
+      console.log('beds:', requestBody.beds, 'type:', typeof requestBody.beds);
+      console.log('bathrooms:', requestBody.bathrooms, 'type:', typeof requestBody.bathrooms);
+      
       const response = await fetch('http://localhost:8080/api/host/listings', {
         method: 'POST',
         headers: {
@@ -38,11 +101,7 @@ const CreateListingPage: React.FC = () => {
           'X-User-Id': user.id.toString(),
           'X-User-Role': 'host',
         },
-        body: JSON.stringify({
-          ...formData,
-          pricePerNight: parseFloat(formData.pricePerNight),
-          maxGuests: parseInt(formData.maxGuests),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -51,29 +110,25 @@ const CreateListingPage: React.FC = () => {
 
       const data = await response.json();
       
-      // Add image if provided
-      if (data.id) {
-        try {
-          if (uploadMethod === 'url' && imageUrl.trim()) {
-            // Upload via URL
-            await fetch(`http://localhost:8080/api/host/listings/${data.id}/images`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-User-Id': user.id.toString(),
-                'X-User-Role': 'host',
-              },
-              body: JSON.stringify({ imageUrl }),
-            });
-          } else if (uploadMethod === 'file') {
-            // Upload via file
-            const fileInput = document.getElementById('createFileInput') as HTMLInputElement;
-            const file = fileInput?.files?.[0];
-            
-            if (file) {
-              // First, upload the file
+      // Add images if provided
+      if (data.id && images.length > 0) {
+        for (const image of images) {
+          try {
+            if (image.type === 'url') {
+              // Upload via URL
+              await fetch(`http://localhost:8080/api/host/listings/${data.id}/images`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-User-Id': user.id.toString(),
+                  'X-User-Role': 'host',
+                },
+                body: JSON.stringify({ imageUrl: image.url }),
+              });
+            } else if (image.type === 'file' && image.file) {
+              // Upload via file
               const formData = new FormData();
-              formData.append('file', file);
+              formData.append('file', image.file);
 
               const uploadResponse = await fetch('http://localhost:8080/api/upload/image', {
                 method: 'POST',
@@ -87,7 +142,7 @@ const CreateListingPage: React.FC = () => {
               if (uploadResponse.ok) {
                 const uploadData = await uploadResponse.json();
                 
-                // Then, add the image URL to the listing
+                // Add the image URL to the listing
                 await fetch(`http://localhost:8080/api/host/listings/${data.id}/images`, {
                   method: 'POST',
                   headers: {
@@ -99,9 +154,9 @@ const CreateListingPage: React.FC = () => {
                 });
               }
             }
+          } catch (imgErr) {
+            console.error('Failed to add image:', imgErr);
           }
-        } catch (imgErr) {
-          console.error('Failed to add image:', imgErr);
         }
       }
       
@@ -193,16 +248,39 @@ const CreateListingPage: React.FC = () => {
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
                   City *
                 </label>
-                <input
-                  type="text"
+                <select
                   id="city"
                   name="city"
                   required
                   value={formData.city}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="New York"
-                />
+                >
+                  <option value="">Select a city</option>
+                  <option value="Casablanca">Casablanca</option>
+                  <option value="Rabat">Rabat</option>
+                  <option value="Marrakech">Marrakech</option>
+                  <option value="Fes">Fes</option>
+                  <option value="Tangier">Tangier</option>
+                  <option value="Agadir">Agadir</option>
+                  <option value="Meknes">Meknes</option>
+                  <option value="Oujda">Oujda</option>
+                  <option value="Kenitra">Kenitra</option>
+                  <option value="Tetouan">Tetouan</option>
+                  <option value="Safi">Safi</option>
+                  <option value="Temara">Temara</option>
+                  <option value="Mohammedia">Mohammedia</option>
+                  <option value="Khouribga">Khouribga</option>
+                  <option value="El Jadida">El Jadida</option>
+                  <option value="Beni Mellal">Beni Mellal</option>
+                  <option value="Nador">Nador</option>
+                  <option value="Taza">Taza</option>
+                  <option value="Settat">Settat</option>
+                  <option value="Khemisset">Khemisset</option>
+                  <option value="Essaouira">Essaouira</option>
+                  <option value="Ouarzazate">Ouarzazate</option>
+                  <option value="Chefchaouen">Chefchaouen</option>
+                </select>
               </div>
             </div>
 
@@ -246,12 +324,48 @@ const CreateListingPage: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label htmlFor="beds" className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Beds *
+                </label>
+                <select
+                  id="beds"
+                  name="beds"
+                  required
+                  value={formData.beds}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                    <option key={num} value={num}>{num} {num === 1 ? 'bed' : 'beds'}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Bathrooms *
+                </label>
+                <select
+                  id="bathrooms"
+                  name="bathrooms"
+                  required
+                  value={formData.bathrooms}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <option key={num} value={num}>{num} {num === 1 ? 'bathroom' : 'bathrooms'}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Property Image (Optional)
+                Property Images
               </label>
               
               {/* Upload Method Tabs */}
@@ -265,7 +379,7 @@ const CreateListingPage: React.FC = () => {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Upload File
+                  Upload Files
                 </button>
                 <button
                   type="button"
@@ -291,34 +405,69 @@ const CreateListingPage: React.FC = () => {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF, WEBP (MAX. 5MB)</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF, WEBP (MAX. 5MB each)</p>
                     </div>
                     <input
                       id="createFileInput"
                       type="file"
                       className="hidden"
                       accept="image/*"
+                      multiple
+                      onChange={handleFileSelect}
                     />
                   </label>
                 </div>
               ) : (
-                <div>
+                <div className="flex gap-2">
                   <input
                     type="url"
                     id="imageUrl"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImageUrl())}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="https://example.com/image.jpg"
                   />
-                  <p className="text-sm text-gray-500 mt-2">
-                    Enter the URL of an image from any website
-                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAddImageUrl}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+
+              {/* Image Previews */}
+              {images.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image.url}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-black bg-opacity-50 text-white text-xs rounded">
+                        {image.type === 'file' ? 'File' : 'URL'}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
               
               <p className="text-sm text-gray-500 mt-2">
-                You can add more images later from the listing details page
+                {images.length === 0 
+                  ? 'Add at least one image to make your listing more attractive'
+                  : `${images.length} image${images.length !== 1 ? 's' : ''} added`
+                }
               </p>
             </div>
 

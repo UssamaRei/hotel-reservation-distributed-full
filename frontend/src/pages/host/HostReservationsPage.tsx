@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, User, Home, DollarSign, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,11 +14,14 @@ interface Reservation {
   listingTitle: string;
   guestName: string;
   guestEmail: string;
+  guestPhone?: string;
+  guestNotes?: string;
 }
 
 const HostReservationsPage: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -256,7 +259,11 @@ const HostReservationsPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredReservations.map((reservation) => (
-                    <tr key={reservation.id} className="hover:bg-gray-50">
+                    <tr 
+                      key={reservation.id} 
+                      onClick={() => navigate(`/host/reservations/${reservation.id}`)}
+                      className="hover:bg-gray-50 cursor-pointer transition"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -288,7 +295,7 @@ const HostReservationsPage: React.FC = () => {
                           {reservation.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm space-x-2">
+                      <td className="px-6 py-4 text-sm space-x-2" onClick={(e) => e.stopPropagation()}>
                         {reservation.status.toLowerCase() === 'pending' && (
                           <>
                             <button

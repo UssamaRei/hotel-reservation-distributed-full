@@ -11,6 +11,8 @@ interface Listing {
   address: string;
   pricePerNight: number;
   maxGuests: number;
+  beds: number;
+  bathrooms: number;
   userId: number;
   imageUrls: string[];
   amenities?: string[];
@@ -157,50 +159,28 @@ const HotelDetailsPage = () => {
       }
     }
     
-    try {
-      // Calculate total price (number of nights * price per night)
-      const checkIn = new Date(bookingData.checkIn);
-      const checkOut = new Date(bookingData.checkOut);
-      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-      const totalPrice = nights * listing.pricePerNight;
-      
-      const reservationData = {
-        listingId: listing.id,
-        userId: user.id,
-        checkIn: bookingData.checkIn,
-        checkOut: bookingData.checkOut,
-        totalPrice: totalPrice,
-        status: 'pending',
-        guests: parseInt(bookingData.guests) || 2
-      };
-      
-      const response = await fetch('http://localhost:8080/api/reservations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': user.id.toString()
+    // Calculate total price and navigate to confirmation page
+    const checkInDate = new Date(bookingData.checkIn);
+    const checkOutDate = new Date(bookingData.checkOut);
+    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    const totalPrice = nights * listing.pricePerNight;
+    
+    // Navigate to confirmation page with booking data
+    navigate('/reservation-confirmation', {
+      state: {
+        listing: {
+          id: listing.id,
+          title: listing.title,
+          city: listing.city,
+          address: listing.address,
+          pricePerNight: listing.pricePerNight,
+          imageUrls: listing.imageUrls,
         },
-        body: JSON.stringify(reservationData)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create reservation');
+        bookingData: bookingData,
+        totalPrice: totalPrice,
+        nights: nights,
       }
-      
-      const createdReservation = await response.json();
-      alert(`Reservation confirmed for ${listing.title}!\nTotal: $${totalPrice} for ${nights} night(s)\nStatus: Pending approval`);
-      
-      // Reset form
-      setBookingData({
-        checkIn: '',
-        checkOut: '',
-        guests: '2'
-      });
-    } catch (err) {
-      console.error('Reservation error:', err);
-      alert(err instanceof Error ? err.message : 'Failed to create reservation. Please try again.');
-    }
+    });
   };
 
   const locationString = `${listing.city || ''}${listing.address ? ', ' + listing.address : ''}`;
@@ -249,11 +229,35 @@ const HotelDetailsPage = () => {
                 <p className="text-gray-700 leading-relaxed text-lg">{listing.description}</p>
               </div>
 
-              {/* Max Guests Info */}
-              <div className="mb-8 bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <span className="text-gray-800 font-medium">Maximum {listing.maxGuests} guests</span>
+              {/* Property Details */}
+              <div className="mb-8 bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Property Details</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{listing.maxGuests}</p>
+                      <p className="text-sm text-gray-600">Guests</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{listing.beds || 1}</p>
+                      <p className="text-sm text-gray-600">Beds</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                    </svg>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{listing.bathrooms || 1}</p>
+                      <p className="text-sm text-gray-600">Bathrooms</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -330,6 +334,35 @@ const HotelDetailsPage = () => {
                 </div>
                 <p className="text-sm text-gray-500">Taxes and fees included</p>
               </div>
+
+              {/* Reserved Dates Section */}
+              {bookedDates.length > 0 && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-2 mb-3">
+                    <Calendar className="h-5 w-5 text-red-600 mt-0.5" />
+                    <h3 className="text-sm font-semibold text-red-900">Reserved Dates</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {bookedDates.map((booking, index) => {
+                      const checkInDate = new Date(booking.checkIn);
+                      const checkOutDate = new Date(booking.checkOut);
+                      
+                      return (
+                        <div key={index} className="text-sm text-red-800">
+                          <span className="font-medium">
+                            {checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                          <span className="mx-1">→</span>
+                          <span className="font-medium">
+                            {checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-red-600 mt-3">These dates are not available for booking</p>
+                </div>
+              )}
 
               <form onSubmit={handleReserve} className="space-y-4">
                 {/* Check-in Date */}
