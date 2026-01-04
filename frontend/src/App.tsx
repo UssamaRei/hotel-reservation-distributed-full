@@ -8,6 +8,7 @@ import AdminLayout from './components/AdminLayout';
 import HomePage from './pages/HomePage';
 import HotelsPage from './pages/HotelsPage';
 import HotelDetailsPage from './pages/HotelDetailsPage';
+import HostProfilePage from './pages/HostProfilePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import BecomeHostPage from './pages/BecomeHostPage';
@@ -30,6 +31,7 @@ import HostReservationsPage from './pages/host/HostReservationsPage';
 import HostReservationDetailsPage from './pages/host/HostReservationDetailsPage';
 import MyReservationsPage from './pages/MyReservationsPage';
 import ReservationConfirmationPage from './pages/ReservationConfirmationPage';
+import UserProfilePage from './pages/UserProfilePage';
 
 function App() {
   return (
@@ -47,6 +49,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/hotels" element={<HotelsPage />} />
                   <Route path="/hotels/:id" element={<HotelDetailsPage />} />
+                  <Route path="/host/:id" element={<HostProfilePage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/become-host" element={<BecomeHostPage />} />
@@ -61,6 +64,11 @@ function App() {
                   <Route path="/my-reservations" element={
                     <ProtectedRoute>
                       <MyReservationsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <UserProfilePage />
                     </ProtectedRoute>
                   } />
                   

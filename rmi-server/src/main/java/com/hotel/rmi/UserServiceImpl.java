@@ -167,4 +167,48 @@ public class UserServiceImpl extends UnicastRemoteObject implements UserService 
             throw new RemoteException("Failed to ban user: " + e.getMessage(), e);
         }
     }
+    
+    @Override
+    public User updateUserProfile(int userId, String name, String email) throws RemoteException {
+        try {
+            logger.info("Updating user profile: " + userId);
+            
+            // Check if new email already exists for another user
+            User existingEmail = userDAO.findByEmail(email);
+            if (existingEmail != null && existingEmail.getId() != userId) {
+                throw new RemoteException("Email already exists");
+            }
+            
+            boolean updated = userDAO.updateProfile(userId, name, email);
+            if (!updated) {
+                throw new NotFoundException("User not found with ID: " + userId);
+            }
+            
+            return getUserById(userId);
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error updating user profile", e);
+            throw new RemoteException("Failed to update user profile: " + e.getMessage(), e);
+        } catch (NotFoundException e) {
+            throw new RemoteException(e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public boolean changePassword(int userId, String currentPassword, String newPassword) throws RemoteException {
+        try {
+            logger.info("Changing password for user: " + userId);
+            
+            boolean changed = userDAO.changePassword(userId, currentPassword, newPassword);
+            if (!changed) {
+                throw new RemoteException("Current password is incorrect");
+            }
+            
+            return true;
+            
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error changing password", e);
+            throw new RemoteException("Failed to change password: " + e.getMessage(), e);
+        }
+    }
 }

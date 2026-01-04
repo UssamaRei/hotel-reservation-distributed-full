@@ -2,8 +2,10 @@ package com.hotel.api.controller;
 
 import com.hotel.shared.model.Listing;
 import com.hotel.shared.model.Reservation;
+import com.hotel.shared.model.User;
 import com.hotel.shared.service.ListingService;
 import com.hotel.shared.service.ReservationService;
+import com.hotel.shared.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,9 @@ public class ListingController {
     @Autowired
     private ReservationService reservationService;
     
+    @Autowired
+    private UserService userService;
+    
     /**
      * Get all listings (public access)
      * GET /api/listings
@@ -51,7 +56,39 @@ public class ListingController {
     public ResponseEntity<?> getListingById(@PathVariable int id) {
         try {
             Listing listing = listingService.getListingById(id);
-            return ResponseEntity.ok(listing);
+            
+            // Create enriched response with host information
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", listing.getId());
+            response.put("userId", listing.getUserId());
+            response.put("title", listing.getTitle());
+            response.put("description", listing.getDescription());
+            response.put("city", listing.getCity());
+            response.put("address", listing.getAddress());
+            response.put("pricePerNight", listing.getPricePerNight());
+            response.put("maxGuests", listing.getMaxGuests());
+            response.put("beds", listing.getBeds());
+            response.put("bathrooms", listing.getBathrooms());
+            response.put("status", listing.getStatus());
+            response.put("imageUrls", listing.getImageUrls());
+            response.put("createdAt", listing.getCreatedAt());
+            
+            // Fetch host information
+            try {
+                User host = userService.getUserById(listing.getUserId());
+                if (host != null) {
+                    Map<String, Object> hostInfo = new HashMap<>();
+                    hostInfo.put("id", host.getId());
+                    hostInfo.put("name", host.getName());
+                    hostInfo.put("email", host.getEmail());
+                    hostInfo.put("createdAt", host.getCreatedAt());
+                    response.put("host", hostInfo);
+                }
+            } catch (Exception e) {
+                response.put("host", null);
+            }
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             String message = e.getMessage();
             if (message.contains("not found") || message.contains("NotFoundException")) {
@@ -114,6 +151,48 @@ public class ListingController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createError("Failed to fetch booked dates: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get host profile with their listings (public access)
+     * GET /api/listings/host/{hostId}
+     */
+    @GetMapping("/host/{hostId}")
+    public ResponseEntity<?> getHostProfile(@PathVariable int hostId) {
+        try {
+            // Get host information
+            User host = userService.getUserById(hostId);
+            if (host == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createError("Host not found"));
+            }
+            
+            // Get all listings by this host
+            List<Listing> allListings = listingService.getAllListings();
+            List<Listing> hostListings = new ArrayList<>();
+            for (Listing listing : allListings) {
+                if (listing.getUserId() == hostId && "approved".equalsIgnoreCase(listing.getStatus())) {
+                    hostListings.add(listing);
+                }
+            }
+            
+            // Build response
+            Map<String, Object> response = new HashMap<>();
+            Map<String, Object> hostInfo = new HashMap<>();
+            hostInfo.put("id", host.getId());
+            hostInfo.put("name", host.getName());
+            hostInfo.put("email", host.getEmail());
+            hostInfo.put("createdAt", host.getCreatedAt());
+            
+            response.put("host", hostInfo);
+            response.put("listings", hostListings);
+            response.put("listingCount", hostListings.size());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createError("Failed to fetch host profile: " + e.getMessage()));
         }
     }
     

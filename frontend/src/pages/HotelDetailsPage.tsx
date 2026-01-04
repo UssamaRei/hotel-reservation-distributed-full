@@ -17,6 +17,12 @@ interface Listing {
   imageUrls: string[];
   amenities?: string[];
   status: string;
+  host?: {
+    id: number;
+    name: string;
+    email: string;
+    createdAt: string;
+  };
 }
 
 const HotelDetailsPage = () => {
@@ -46,12 +52,7 @@ const HotelDetailsPage = () => {
   const fetchListing = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8080/api/admin/listings/${id}`, {
-        headers: {
-          'X-User-Id': '1',
-          'X-User-Role': 'admin',
-        },
-      });
+      const response = await fetch(`http://localhost:8080/api/listings/${id}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch listing');
@@ -223,6 +224,25 @@ const HotelDetailsPage = () => {
                 <MapPin className="h-5 w-5 mr-2" />
                 <span className="text-lg">{locationString || 'Location not specified'}</span>
               </div>
+
+              {/* Host Information */}
+              {listing.host && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Hosted by</h3>
+                  <button
+                    onClick={() => navigate(`/host/${listing.host?.id}`)}
+                    className="flex items-center gap-3 hover:bg-blue-100 p-2 rounded-lg transition w-full text-left"
+                  >
+                    <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xl">
+                      {listing.host.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{listing.host.name}</p>
+                      <p className="text-sm text-gray-600">Member since {new Date(listing.host.createdAt).getFullYear()}</p>
+                    </div>
+                  </button>
+                </div>
+              )}
 
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Apartment</h2>

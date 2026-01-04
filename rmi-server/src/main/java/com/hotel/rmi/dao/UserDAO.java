@@ -188,5 +188,71 @@ public class UserDAO {
             return false;
         }
     }
+    
+    /**
+     * Update user profile (name and email)
+     */
+    public boolean updateProfile(int userId, String name, String email) throws SQLException {
+        String sql = "UPDATE users SET name = ?, email = ? WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, name);
+            stmt.setString(2, email);
+            stmt.setInt(3, userId);
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows > 0) {
+                logger.info("Updated user profile: " + userId);
+                return true;
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * Change user password
+     */
+    public boolean changePassword(int userId, String currentPassword, String newPassword) throws SQLException {
+        // First verify current password
+        String verifySql = "SELECT password FROM users WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement verifyStmt = conn.prepareStatement(verifySql)) {
+            
+            verifyStmt.setInt(1, userId);
+            
+            try (ResultSet rs = verifyStmt.executeQuery()) {
+                if (rs.next()) {
+                    String storedPassword = rs.getString("password");
+                    if (!storedPassword.equals(currentPassword)) {
+                        // Current password is incorrect
+                        return false;
+                    }
+                } else {
+                    // User not found
+                    return false;
+                }
+            }
+            
+            // Update password
+            String updateSql = "UPDATE users SET password = ? WHERE id = ?";
+            try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                updateStmt.setString(1, newPassword);
+                updateStmt.setInt(2, userId);
+                
+                int affectedRows = updateStmt.executeUpdate();
+                
+                if (affectedRows > 0) {
+                    logger.info("Changed password for user: " + userId);
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
 }
 

@@ -1,12 +1,31 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Hotel, Menu, X, LogOut, User } from 'lucide-react';
+import { Hotel, Menu, X, LogOut, User, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const profileMenuRef = React.useRef<HTMLDivElement>(null);
+
+  // Close profile menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileMenuOpen]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -14,6 +33,7 @@ const Navbar = () => {
     logout();
     navigate('/');
     setIsMenuOpen(false);
+    setIsProfileMenuOpen(false);
   };
 
   return (
@@ -51,20 +71,43 @@ const Navbar = () => {
             )}
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-gray-700">
-                  <User className="h-5 w-5" />
-                  <span className="font-medium">{user?.name}</span>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                    {user?.role}
-                  </span>
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition"
+                  >
+                    <User className="h-5 w-5" />
+                    <span className="font-medium">{user?.name}</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                      {user?.role}
+                    </span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4" />
+                          <span>My Profile</span>
+                        </div>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </button>
               </div>
             ) : (
               <Link to="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
@@ -137,6 +180,14 @@ const Navbar = () => {
                     {user?.role}
                   </span>
                 </div>
+                <Link
+                  to="/profile"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 font-medium py-2"
+                  onClick={toggleMenu}
+                >
+                  <User className="h-5 w-5" />
+                  <span>My Profile</span>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center justify-center space-x-2 w-full bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
