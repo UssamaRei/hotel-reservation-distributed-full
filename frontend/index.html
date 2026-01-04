@@ -10,10 +10,22 @@
 <div class="container">
     <header class="header">
         <h1>Hotel Rooms</h1>
-        <button class="btn primary" onclick="loadRooms()">Reload</button>
+        <div id="auth-section">
+            <div id="login-form" style="display: none;">
+                <input id="username" placeholder="Username" type="text">
+                <input id="password" placeholder="Password" type="password">
+                <button class="btn primary" onclick="login()">Login</button>
+                <button class="btn" onclick="showRegister()">Register</button>
+            </div>
+            <div id="user-info" style="display: none;">
+                <span id="welcome-text"></span>
+                <button class="btn primary" onclick="loadRooms()">Reload</button>
+                <button class="btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
     </header>
 
-    <main class="main">
+    <main class="main" id="main-content" style="display: none;">
         <section class="list-card">
             <h2>Available Rooms</h2>
             <div id="list" class="list-placeholder">No data loaded yet.</div>
@@ -40,6 +52,7 @@
     <footer class="footer">Simple demo — CRUD via Spring API + RMI backend</footer>
  </div>
 
+ <script src="js/auth.js"></script>
  <script src="js/room.js"></script>
 </body>
 </html>
