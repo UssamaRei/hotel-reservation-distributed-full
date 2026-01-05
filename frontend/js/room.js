@@ -1,10 +1,14 @@
 const API = 'http://localhost:8080';
 
 function loadRooms() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('list').innerHTML = '';
+    
     fetch(API + '/rooms', {
         headers: getAuthHeaders()
     })
         .then(res => {
+            document.getElementById('loading').style.display = 'none';
             if (!res.ok) {
                 if (res.status === 401) {
                     logout();
@@ -15,25 +19,40 @@ function loadRooms() {
             return res.json();
         })
         .then(data => {
+            if (data.length === 0) {
+                document.getElementById('list').innerHTML = '<p class="loading">No rooms available. Add some rooms to get started!</p>';
+                return;
+            }
+            
             const rows = data.map(r => `
                 <tr>
                     <td>${r.id}</td>
-                    <td>${r.type}</td>
-                    <td>${r.price}</td>
+                    <td>${escapeHtml(r.type)}</td>
+                    <td>$${r.price}</td>
                     <td>
-                        <button class="action-btn" onclick="editRoom(${r.id}, '${escapeHtml(r.type)}', ${r.price})">Edit</button>
-                        <button class="action-btn danger" onclick="deleteRoom(${r.id})">Delete</button>
+                        <button class="action-btn edit" onclick="editRoom(${r.id}, '${escapeHtml(r.type)}', ${r.price})">✏️ Edit</button>
+                        <button class="action-btn danger" onclick="deleteRoom(${r.id})">🗑️ Delete</button>
                     </td>
                 </tr>
             `).join('');
 
             document.getElementById('list').innerHTML = `
-                <table border="1" cellpadding="4">
-                    <thead><tr><th>ID</th><th>Type</th><th>Price</th><th>Actions</th></tr></thead>
+                <table class="room-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Room Type</th>
+                            <th>Price per Night</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
                     <tbody>${rows}</tbody>
                 </table>`;
         })
-        .catch(e => alert('Error: ' + e.message));
+        .catch(e => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('list').innerHTML = `<p class="error-message" style="display: block;">Error: ${e.message}</p>`;
+        });
 }
 
 function saveRoom() {

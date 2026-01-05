@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function showLoginForm() {
     document.getElementById('login-form').style.display = 'block';
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('user-info').style.display = 'none';
+    document.getElementById('main-content').style.display = 'none';
+}
+
+function showRegisterForm() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'block';
     document.getElementById('user-info').style.display = 'none';
     document.getElementById('main-content').style.display = 'none';
 }
@@ -21,6 +29,7 @@ function showMainContent() {
     const role = localStorage.getItem('role');
     
     document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
     document.getElementById('user-info').style.display = 'block';
     document.getElementById('main-content').style.display = 'block';
     document.getElementById('welcome-text').textContent = `Welcome, ${username} (${role})`;
@@ -32,9 +41,13 @@ function showMainContent() {
 function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('login-error');
+
+    // Clear previous errors
+    errorDiv.style.display = 'none';
 
     if (!username || !password) {
-        alert('Please enter username and password');
+        showError('login-error', 'Please enter username and password');
         return;
     }
 
@@ -63,16 +76,25 @@ function login() {
         showMainContent();
     })
     .catch(error => {
-        alert('Login failed: ' + error);
+        showError('login-error', 'Login failed: ' + error);
     });
 }
 
-function showRegister() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+function register() {
+    const username = document.getElementById('reg-username').value;
+    const password = document.getElementById('reg-password').value;
+
+    // Clear previous messages
+    document.getElementById('register-error').style.display = 'none';
+    document.getElementById('register-success').style.display = 'none';
 
     if (!username || !password) {
-        alert('Please enter username and password');
+        showError('register-error', 'Please enter username and password');
+        return;
+    }
+
+    if (password.length < 6) {
+        showError('register-error', 'Password must be at least 6 characters long');
         return;
     }
 
@@ -94,15 +116,28 @@ function showRegister() {
         localStorage.setItem('username', data.username);
         localStorage.setItem('role', data.role);
         
-        // Clear login form
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
+        // Clear registration form
+        document.getElementById('reg-username').value = '';
+        document.getElementById('reg-password').value = '';
         
-        showMainContent();
+        showSuccess('register-success', 'Account created successfully! Redirecting...');
+        setTimeout(() => showMainContent(), 1500);
     })
     .catch(error => {
-        alert('Registration failed: ' + error);
+        showError('register-error', 'Registration failed: ' + error);
     });
+}
+
+function showError(elementId, message) {
+    const errorDiv = document.getElementById(elementId);
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function showSuccess(elementId, message) {
+    const successDiv = document.getElementById(elementId);
+    successDiv.textContent = message;
+    successDiv.style.display = 'block';
 }
 
 function logout() {
