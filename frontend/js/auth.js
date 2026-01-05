@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function showLoginForm() {
     document.getElementById('login-form').style.display = 'block';
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('user-info').style.display = 'none';
+    document.getElementById('main-content').style.display = 'none';
+}
+
+function showRegisterForm() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'block';
     document.getElementById('user-info').style.display = 'none';
     document.getElementById('main-content').style.display = 'none';
 }
@@ -21,6 +29,7 @@ function showMainContent() {
     const role = localStorage.getItem('role');
     
     document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
     document.getElementById('user-info').style.display = 'block';
     document.getElementById('main-content').style.display = 'block';
     document.getElementById('welcome-text').textContent = `Welcome, ${username} (${role})`;
@@ -67,9 +76,9 @@ function login() {
     });
 }
 
-function showRegister() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+function register() {
+    const username = document.getElementById('reg-username').value;
+    const password = document.getElementById('reg-password').value;
 
     if (!username || !password) {
         alert('Please enter username and password');
@@ -94,9 +103,9 @@ function showRegister() {
         localStorage.setItem('username', data.username);
         localStorage.setItem('role', data.role);
         
-        // Clear login form
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
+        // Clear registration form
+        document.getElementById('reg-username').value = '';
+        document.getElementById('reg-password').value = '';
         
         showMainContent();
     })

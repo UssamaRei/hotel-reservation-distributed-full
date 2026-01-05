@@ -15,7 +15,13 @@
                 <input id="username" placeholder="Username" type="text">
                 <input id="password" placeholder="Password" type="password">
                 <button class="btn primary" onclick="login()">Login</button>
-                <button class="btn" onclick="showRegister()">Register</button>
+                <button class="btn" onclick="showRegisterForm()">Register</button>
+            </div>
+            <div id="register-form" style="display: none;">
+                <input id="reg-username" placeholder="Username" type="text">
+                <input id="reg-password" placeholder="Password" type="password">
+                <button class="btn primary" onclick="register()">Register</button>
+                <button class="btn" onclick="showLoginForm()">Back to Login</button>
             </div>
             <div id="user-info" style="display: none;">
                 <span id="welcome-text"></span>
