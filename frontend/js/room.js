@@ -1,8 +1,19 @@
 const API = 'http://localhost:8080';
 
 function loadRooms() {
-    fetch(API + '/rooms')
-        .then(res => res.json())
+    fetch(API + '/rooms', {
+        headers: getAuthHeaders()
+    })
+        .then(res => {
+            if (!res.ok) {
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                throw new Error('Failed to load rooms');
+            }
+            return res.json();
+        })
         .then(data => {
             const rows = data.map(r => `
                 <tr>
@@ -22,7 +33,7 @@ function loadRooms() {
                     <tbody>${rows}</tbody>
                 </table>`;
         })
-        .catch(e => alert('Error: ' + e));
+        .catch(e => alert('Error: ' + e.message));
 }
 
 function saveRoom() {
@@ -31,22 +42,45 @@ function saveRoom() {
     const price = parseFloat(document.getElementById('price').value || 0);
 
     const payload = { type, price };
+    const headers = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+    };
+
     if (id) {
         // update
         fetch(API + '/rooms/' + id, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: headers,
             body: JSON.stringify(payload)
-        }).then(() => { clearForm(); loadRooms(); })
-          .catch(e => alert('Error: ' + e));
+        }).then(res => {
+            if (!res.ok) {
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                throw new Error('Failed to update room');
+            }
+            clearForm(); 
+            loadRooms();
+        }).catch(e => alert('Error: ' + e.message));
     } else {
         // create
         fetch(API + '/rooms', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: headers,
             body: JSON.stringify(payload)
-        }).then(() => { clearForm(); loadRooms(); })
-          .catch(e => alert('Error: ' + e));
+        }).then(res => {
+            if (!res.ok) {
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                throw new Error('Failed to create room');
+            }
+            clearForm(); 
+            loadRooms();
+        }).catch(e => alert('Error: ' + e.message));
     }
 }
 
@@ -58,10 +92,22 @@ function editRoom(id, type, price) {
 
 function deleteRoom(id) {
     if (!confirm('Delete room id=' + id + '?')) return;
-    fetch(API + '/rooms/' + id, { method: 'DELETE' })
-        .then(res => res.json())
+    fetch(API + '/rooms/' + id, { 
+        method: 'DELETE',
+        headers: getAuthHeaders()
+    })
+        .then(res => {
+            if (!res.ok) {
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                throw new Error('Failed to delete room');
+            }
+            return res.json();
+        })
         .then(() => loadRooms())
-        .catch(e => alert('Error: ' + e));
+        .catch(e => alert('Error: ' + e.message));
 }
 
 function clearForm() {

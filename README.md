@@ -7,6 +7,15 @@ This project is a minimal distributed hotel room management system demonstrating
 - A Java RMI server (`rmi-server`) exposing a remote `RoomService`.
 - A Spring Boot REST API (`spring-api`) acting as a client to the RMI service and translating RMI calls into HTTP endpoints.
 - A lightweight HTML/JavaScript frontend (`frontend`) consuming the REST API for CRUD operations on rooms.
+- **JWT-based authentication system** for secure access to the API endpoints.
+
+Authentication
+--------------
+The system now includes JWT-based authentication. See [AUTHENTICATION.md](AUTHENTICATION.md) for detailed information.
+
+Default login credentials:
+- Admin: username=`admin`, password=`admin123`
+- User: username=`user`, password=`user123`
 
 Current Persistence Mode
 ------------------------
