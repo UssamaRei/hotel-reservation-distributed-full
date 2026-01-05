@@ -41,9 +41,13 @@ function showMainContent() {
 function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('login-error');
+
+    // Clear previous errors
+    errorDiv.style.display = 'none';
 
     if (!username || !password) {
-        alert('Please enter username and password');
+        showError('login-error', 'Please enter username and password');
         return;
     }
 
@@ -72,7 +76,7 @@ function login() {
         showMainContent();
     })
     .catch(error => {
-        alert('Login failed: ' + error);
+        showError('login-error', 'Login failed: ' + error);
     });
 }
 
@@ -80,8 +84,17 @@ function register() {
     const username = document.getElementById('reg-username').value;
     const password = document.getElementById('reg-password').value;
 
+    // Clear previous messages
+    document.getElementById('register-error').style.display = 'none';
+    document.getElementById('register-success').style.display = 'none';
+
     if (!username || !password) {
-        alert('Please enter username and password');
+        showError('register-error', 'Please enter username and password');
+        return;
+    }
+
+    if (password.length < 6) {
+        showError('register-error', 'Password must be at least 6 characters long');
         return;
     }
 
@@ -107,11 +120,24 @@ function register() {
         document.getElementById('reg-username').value = '';
         document.getElementById('reg-password').value = '';
         
-        showMainContent();
+        showSuccess('register-success', 'Account created successfully! Redirecting...');
+        setTimeout(() => showMainContent(), 1500);
     })
     .catch(error => {
-        alert('Registration failed: ' + error);
+        showError('register-error', 'Registration failed: ' + error);
     });
+}
+
+function showError(elementId, message) {
+    const errorDiv = document.getElementById(elementId);
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function showSuccess(elementId, message) {
+    const successDiv = document.getElementById(elementId);
+    successDiv.textContent = message;
+    successDiv.style.display = 'block';
 }
 
 function logout() {
