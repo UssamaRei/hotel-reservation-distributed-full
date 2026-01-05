@@ -32,7 +32,18 @@ function showMainContent() {
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('user-info').style.display = 'block';
     document.getElementById('main-content').style.display = 'block';
-    document.getElementById('welcome-text').textContent = `Welcome, ${username} (${role})`;
+    
+    // Update user avatar with first letter of username
+    const avatar = document.getElementById('user-avatar');
+    avatar.textContent = username.charAt(0).toUpperCase();
+    
+    // Update welcome text with proper role styling
+    const welcomeText = document.getElementById('welcome-text');
+    const roleBadgeClass = role.toLowerCase();
+    welcomeText.innerHTML = `
+        <span>👋 Welcome, <strong>${username}</strong> 
+        (<span class="role-badge ${roleBadgeClass}">${role}</span>)</span>
+    `;
     
     // Auto-load rooms when showing main content
     loadRooms();

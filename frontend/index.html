@@ -52,10 +52,26 @@
             padding: 12px 24px;
             margin: 5px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .btn.primary {
@@ -77,17 +93,109 @@
         }
         
         .user-info {
-            background: #d4edda;
-            padding: 15px;
-            border-radius: 5px;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            padding: 20px;
+            border-radius: 10px;
             margin-bottom: 20px;
-            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .welcome-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .welcome-text {
             font-weight: bold;
             color: #155724;
-            margin-right: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #28a745;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .role-badge {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .role-badge.admin {
+            background: #dc3545;
+        }
+        
+        .role-badge.user {
+            background: #28a745;
+        }
+        
+        /* Responsive design for user info */
+        @media (max-width: 768px) {
+            .user-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .welcome-section {
+                justify-content: center;
+            }
+            
+            .user-actions {
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .user-actions .btn {
+                flex: 1;
+                min-width: 120px;
+            }
         }
         
         .error-message {
@@ -216,9 +324,20 @@
             
             <!-- User Info -->
             <div id="user-info" class="user-info" style="display: none;">
-                <span id="welcome-text" class="welcome-text"></span>
-                <button class="btn primary" onclick="loadRooms()">🔄 Reload Rooms</button>
-                <button class="btn secondary" onclick="logout()">🚪 Logout</button>
+                <div class="welcome-section">
+                    <div class="user-avatar" id="user-avatar">A</div>
+                    <div class="welcome-text" id="welcome-text">
+                        <span>👋 Welcome, <strong>admin</strong> (<span class="role-badge">ADMIN</span>)</span>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <button class="btn primary" onclick="loadRooms()">
+                        🔄 Reload Rooms
+                    </button>
+                    <button class="btn secondary" onclick="logout()">
+                        🚪 Logout
+                    </button>
+                </div>
             </div>
         </div>
     </header>
