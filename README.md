@@ -664,7 +664,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👨‍💻 Authors
 
-- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+- OUSSAMA SINA - (https://github.com/UssamaRei)
+- MUSTAPHA OUHARMOUCH - (https://github.com/UssamaRei)
+- ILYAS ATBIR - (https://github.com/UssamaRei)
+- AHMED LAARIF - (https://github.com/UssamaRei)
+- BRAHIM AITBENALI - (https://github.com/UssamaRei)
 
 ---
 
