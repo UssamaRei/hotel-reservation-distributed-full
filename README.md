@@ -664,11 +664,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👨‍💻 Authors
 
-- OUSSAMA SINA - (https://github.com/UssamaRei)
-- MUSTAPHA OUHARMOUCH - (https://github.com/UssamaRei)
-- ILYAS ATBIR - (https://github.com/UssamaRei)
-- AHMED LAARIF - (https://github.com/UssamaRei)
-- BRAHIM AITBENALI - (https://github.com/UssamaRei)
+- OUSSAMA SINA - https://github.com/UssamaRei
+- MUSTAPHA OUHARMOUCH - https://github.com/OUHARMOCH
+- ILYAS ATBIR - https://github.com/nwix
+- AHMED LAARIF - https://github.com/ahmedlaarif
+- BRAHIM AITBENALI - https://github.com/AITBENALIBrahim
 
 ---
 
