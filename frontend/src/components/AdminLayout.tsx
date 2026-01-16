@@ -20,7 +20,7 @@ const AdminLayout: React.FC = () => {
 
   const menuItems = [
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/hotels', icon: Hotel, label: 'Hotels' },
+    { path: '/admin/hotels', icon: Hotel, label: 'Apartements' },
     { path: '/admin/bookings', icon: Calendar, label: 'Bookings' },
     { path: '/admin/approvals', icon: ClipboardCheck, label: 'Listing Approvals' },
     { path: '/admin/host-applications', icon: UserCheck, label: 'Host Applications' },

@@ -139,7 +139,7 @@ const HomePage = () => {
       {/* Featured Hotels Section */}
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Hotels</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Apartements</h2>
           <p className="text-lg text-gray-600">Handpicked stays for your next adventure</p>
         </div>
 
